@@ -6,6 +6,7 @@ import time
 import re
 import Console
 import Database
+import shlex
 
 
 def read_nfc_tag():
@@ -44,7 +45,7 @@ def process_content(content):
 
 last_content = ""
 while True:
-    # Console.info(Database.read("NFC-Tags.db"))
+    Console.info(Database.read(1))
     current_content = read_nfc_tag()
     if current_content:
         processed_content = process_content(current_content)
@@ -52,6 +53,16 @@ while True:
             Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
             Console.info(processed_content)
             last_content = processed_content
+
+            command = Database.read(
+                processed_content
+            )  # Datenbank gibt einen Befehl zurück
+            if command:
+                try:
+                    Console.info(f"Führe Befehl aus: {command}")
+                    subprocess.run(shlex.split(command), check=True)  # Befehl ausführen
+                except subprocess.CalledProcessError as e:
+                    Console.error(f"Fehler beim Ausführen: {e}")
         else:
             Console.info(
                 "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
