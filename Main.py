@@ -23,7 +23,7 @@ def read_nfc_tag():
                 binary_content = file.read()
                 # Extrahiere lesbare Zeichenketten aus den Binärdaten
                 readable_strings = re.findall(
-                    b"[ -~]{4,}", binary_content
+                    b"[ -~]{1,}", binary_content
                 )  # Sucht nach druckbaren ASCII-Zeichen
                 # Dekodiere die Bytes zu Strings und füge sie zu einem großen String zusammen
                 return "\n".join(
