@@ -24,3 +24,7 @@ pip install -r requirements.txt
 # notificaton
 notify-send -i dialog-information -t 5000 "Titel" "Nachricht mit Icon und Timeout"
 ```
+
+```bash
+find ~ -maxdepth 12 -type f -name "*libretro.so"
+```
