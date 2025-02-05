@@ -51,10 +51,10 @@ while True:
             print(processed_content)
             print("### ###")
             last_content = processed_content
-        else:
-            print(
-                "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
-            )
+        # else:
+        #     print(
+        #         "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
+        #     )
     else:
         print("Kein Tag gefunden. Warte 3 Sekunden...")
     time.sleep(3)
