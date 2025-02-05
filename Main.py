@@ -52,10 +52,10 @@ while True:
             Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
             Console.info(processed_content)
             last_content = processed_content
-        # else:
-        #     Console.info(
-        #         "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
-        #     )
+        else:
+            Console.info(
+                "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
+            )
     else:
         Console.info("Kein Tag gefunden. Warte 3 Sekunden...")
     time.sleep(3)
