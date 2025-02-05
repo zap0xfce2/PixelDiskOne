@@ -84,4 +84,4 @@ while True:
             last_process = None
             last_content = ""
 
-    time.sleep(1)
+    # time.sleep(1)
