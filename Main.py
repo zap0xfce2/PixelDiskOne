@@ -48,9 +48,7 @@ while True:
         processed_content = process_content(current_content)
         if processed_content != last_content:
             Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
-            Console.info("### ###")
             Console.info(processed_content)
-            Console.info("### ###")
             last_content = processed_content
         # else:
         #     Console.info(
