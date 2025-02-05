@@ -4,6 +4,7 @@
 import subprocess
 import time
 import re
+import Console
 
 
 def read_nfc_tag():
@@ -46,15 +47,15 @@ while True:
     if current_content:
         processed_content = process_content(current_content)
         if processed_content != last_content:
-            print("Neuer Tag gefunden oder Inhalt hat sich geändert.")
-            print("### ###")
-            print(processed_content)
-            print("### ###")
+            Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
+            Console.info("### ###")
+            Console.info(processed_content)
+            Console.info("### ###")
             last_content = processed_content
         # else:
-        #     print(
+        #     Console.info(
         #         "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
         #     )
     else:
-        print("Kein Tag gefunden. Warte 3 Sekunden...")
+        Console.info("Kein Tag gefunden. Warte 3 Sekunden...")
     time.sleep(3)
