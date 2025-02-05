@@ -1,4 +1,4 @@
-import coloredlogs
+import coloredlogs  # type: ignore
 import logging
 
 coloredlogs.DEFAULT_DATE_FORMAT = "%d.%m.%y - %H:%M:%S"
