@@ -12,7 +12,7 @@ import shlex
 def read_nfc_tag():
     try:
         # Versuch, den Tag zu lesen und den Inhalt zurückzugeben
-        result = subprocess.run(
+        subprocess.run(
             ["nfc-mfultralight", "r", "nfc.dump"],
             check=True,
             stdout=subprocess.DEVNULL,
@@ -21,7 +21,9 @@ def read_nfc_tag():
         with open("nfc.dump", "rb") as file:
             for line in file:
                 if b"T" in line:
-                    return line.split(b"T", 1)[1].strip().decode("utf-8")
+                    return (
+                        line.split(b"T", 1)[1].strip().decode("utf-8", errors="ignore")
+                    )
     except subprocess.CalledProcessError:
         pass
     return None
