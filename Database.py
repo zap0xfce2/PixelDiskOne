@@ -9,8 +9,11 @@ def read(db_file):
 
     suche = ("1",)
     db.execute("SELECT command FROM nfc_tags WHERE id=?", suche)
-    Console.info(db.fetchone()[0])
+    # Console.info(db.fetchone()[0])
+    returnvalue = db.fetchone()[0]
+    sql.close()
+
+    return returnvalue
     # print(db.fetchall())
 
     # Verbindung Schließen
-    sql.close()
