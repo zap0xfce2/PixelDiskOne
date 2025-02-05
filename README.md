@@ -21,11 +21,6 @@ pip install -r requirements.txt
 ```
 
 ```bash
-# NFC Tag leeren
-
-dd if=/dev/zero of=empty.dump bs=1 count=924
-
-nfc-mfultralight r empty.dump
-
-printf "n\nN\nN\nN\n" | nfc-mfultralight w empty.dump
+# notificaton
+notify-send -i dialog-information -t 5000 "Titel" "Nachricht mit Icon und Timeout"
 ```
