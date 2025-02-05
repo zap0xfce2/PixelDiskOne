@@ -21,9 +21,12 @@ def read_nfc_tag():
         with open("nfc.dump", "rb") as file:
             for line in file:
                 if b"T" in line:
-                    return (
+                    content = (
                         line.split(b"T", 1)[1].strip().decode("utf-8", errors="ignore")
                     )
+                    if content.startswith("en"):
+                        return content[2:5]  # Nimmt nur die 3 Zeichen nach "en"
+                    return content
     except subprocess.CalledProcessError:
         pass
     return None
