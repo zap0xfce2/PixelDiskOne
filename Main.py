@@ -53,18 +53,18 @@ while True:
         processed_content = process_content(current_content)
         if processed_content != last_content:
             Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
-            Console.info(processed_content)
+            # Console.info(processed_content)
             last_content = processed_content
 
-            # command = Database.read(
-            #     processed_content
-            # )  # Datenbank gibt einen Befehl zurück
-            # if command:
-            #     try:
-            #         Console.info(f"Führe Befehl aus: {command}")
-            #         subprocess.run(shlex.split(command), check=True)  # Befehl ausführen
-            #     except subprocess.CalledProcessError as e:
-            #         Console.error(f"Fehler beim Ausführen: {e}")
+            command = Database.read(
+                processed_content
+            )  # Datenbank gibt einen Befehl zurück
+            if command:
+                try:
+                    Console.info(f"Führe Befehl aus: {command}")
+                    subprocess.run(shlex.split(command), check=True)  # Befehl ausführen
+                except subprocess.CalledProcessError as e:
+                    Console.error(f"Fehler beim Ausführen: {e}")
         # else:
         #     Console.info(
         #         "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
