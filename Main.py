@@ -11,22 +11,35 @@ import shlex
 
 def read_nfc_tag():
     try:
-        subprocess.run(
+        # Versuch, den Tag zu lesen und den Inhalt zurückzugeben
+        result = subprocess.run(
             ["nfc-mfultralight", "r", "nfc.dump"],
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-
-        with open("nfc.dump", "rb") as file:
-            for line in file:
-                if b"T" in line:
-                    return line.split(b"T", 1)[1].strip().decode("utf-8")
-
+        if result.returncode == 0:
+            with open("nfc.dump", "rb") as file:  # Lese im Binärmodus
+                binary_content = file.read()
+                # Extrahiere lesbare Zeichenketten aus den Binärdaten
+                readable_strings = re.findall(
+                    b"[ -~]{1,}", binary_content
+                )  # Sucht nach druckbaren ASCII-Zeichen
+                # Dekodiere die Bytes zu Strings und füge sie zu einem großen String zusammen
+                return "\n".join(
+                    [string.decode("utf-8") for string in readable_strings]
+                )
     except subprocess.CalledProcessError:
         pass
-
     return None
+
+
+def process_content(content):
+    lines = content.split("\n")
+    for line in lines:
+        if line.startswith("T"):
+            return line[1:].strip()  # Alles nach "T" zurückgeben
+    return None  # Falls kein "T" gefunden wird
 
 
 def process_content(content):
@@ -49,15 +62,16 @@ while True:
             Console.info(processed_content)
             last_content = processed_content
 
-            command = Database.read(
-                processed_content
-            )  # Datenbank gibt einen Befehl zurück
-            if command:
-                try:
-                    Console.info(f"Führe Befehl aus: {command}")
-                    subprocess.run(shlex.split(command), check=True)  # Befehl ausführen
-                except subprocess.CalledProcessError as e:
-                    Console.error(f"Fehler beim Ausführen: {e}")
+            Console.info(process_content(processed_content))
+            # command = Database.read(
+            #     processed_content
+            # )  # Datenbank gibt einen Befehl zurück
+            # if command:
+            #     try:
+            #         Console.info(f"Führe Befehl aus: {command}")
+            #         subprocess.run(shlex.split(command), check=True)  # Befehl ausführen
+            #     except subprocess.CalledProcessError as e:
+            #         Console.error(f"Fehler beim Ausführen: {e}")
         else:
             Console.info(
                 "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
