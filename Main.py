@@ -47,7 +47,9 @@ while True:
         processed_content = process_content(current_content)
         if processed_content != last_content:
             print("Neuer Tag gefunden oder Inhalt hat sich geändert.")
+            print("### ###")
             print(processed_content)
+            print("### ###")
             last_content = processed_content
         else:
             print(
