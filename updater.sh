@@ -1,6 +1,6 @@
 #/bin/bash
 
-echo "Updating PixelDiskOne from Source..."
+echo "Updating PixelDiskOne from source..."
 
 git clean -df
 git reset --hard HEAD
