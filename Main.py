@@ -48,37 +48,40 @@ def process_content(content):
 last_content = ""
 last_process = None  # Hier speichern wir den letzten gestarteten Prozess
 
+last_content = ""
+last_process = None
+
 while True:
     current_content = read_nfc_tag()
+
     if current_content:
         processed_content = process_content(current_content)
+
         if processed_content != last_content:
-            Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
+            Console.info("Neues Tag erkannt.")
             last_content = processed_content
 
             # Falls ein alter Prozess läuft, beende ihn
             if last_process and last_process.poll() is None:
-                Console.info(f"Beende vorherigen Prozess: {last_process.pid}")
-                last_process.terminate()  # Beendet den Prozess sauber
-                try:
-                    last_process.wait(timeout=5)  # Warte bis der Prozess beendet ist
-                except subprocess.TimeoutExpired:
-                    Console.warning("Prozess reagiert nicht, erzwinge Beendigung...")
-                    last_process.kill()  # Erzwinge das Beenden
+                Console.info(f"Beende laufenden Prozess: {last_process.pid}")
+                last_process.terminate()
+                last_process.wait()
 
+            # Neuen Befehl aus Datenbank abrufen und Prozess starten
             command = Database.read(processed_content)
             if command:
                 try:
                     Console.info(f"Starte neuen Prozess: {command}")
-                    last_process = subprocess.Popen(
-                        shlex.split(command)
-                    )  # Neuer Prozess wird gestartet
+                    last_process = subprocess.Popen(shlex.split(command))
                 except Exception as e:
                     Console.error(f"Fehler beim Starten des Prozesses: {e}")
-        else:
-            Console.info(
-                "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
-            )
     else:
-        Console.info("Kein Tag gefunden. Warte 1 Sekunde...")
+        # Falls kein Tag mehr erkannt wird, beende den laufenden Prozess
+        if last_process and last_process.poll() is None:
+            Console.info(f"Tag entfernt – beende Prozess: {last_process.pid}")
+            last_process.terminate()
+            last_process.wait()
+            last_process = None
+            last_content = ""
+
     time.sleep(1)
