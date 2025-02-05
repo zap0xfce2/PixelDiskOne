@@ -7,8 +7,7 @@ def read(tag_id, db_file="NFC-Tags.db"):
     sql = sqlite3.connect(db_file)
     db = sql.cursor()
 
-    suche = (tag_id,)
-    db.execute("SELECT command FROM nfc_tags WHERE id=?", suche)
+    db.execute("SELECT command FROM nfc_tags WHERE id=?", tag_id)
     # Console.info(db.fetchone()[0])
     returnvalue = db.fetchone()[0]
     sql.close()
