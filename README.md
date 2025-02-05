@@ -14,3 +14,8 @@ while true; do ./updater.sh; sleep 60; done
 ```bash
 python3 Main.py
 ```
+
+
+```bash
+pip install -r requirements.txt
+```
