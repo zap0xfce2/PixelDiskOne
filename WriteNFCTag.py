@@ -1,5 +1,6 @@
 import nfc
-import nfc.ndef
+import nfc.ndef  # Dieser Import ist eigentlich nicht nötig, da nfcpy die NDEF-Funktionen direkt bereitstellt
+from nfc.ndef import TextRecord
 
 
 def format_tag(tag):
@@ -17,7 +18,7 @@ def format_tag(tag):
 def write_text_to_tag(tag, text="demo-test"):
     """Schreibt einen Text in den NFC-Tag"""
     if tag.ndef:
-        record = nfc.ndef.TextRecord(text)  # Erstellt eine neue NDEF-Textnachricht
+        record = TextRecord(text)  # Erstellt eine neue NDEF-Textnachricht
         tag.ndef.records = [record]  # Schreibt die Nachricht auf den Tag
         print(f'Text "{text}" erfolgreich auf den Tag geschrieben.')
     else:
