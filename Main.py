@@ -24,9 +24,13 @@ def read_nfc_tag():
                     content = (
                         line.split(b"T", 1)[1].strip().decode("utf-8", errors="ignore")
                     )
-                    if content.startswith("en"):
-                        content = content[2:]  # "en" entfernen
-                    return content[:3]  # Nur die ersten 3 Zeichen nach "en" zurückgeben
+
+                    # Suche nach "en" und nimm nur die 3 Zeichen danach
+                    match = re.search(r"en(.{3})", content)
+                    if match:
+                        return match.group(1)  # Nur die drei Zeichen nach "en"
+
+                    return content  # Falls "en" nicht existiert, gib den Originalinhalt zurück
     except subprocess.CalledProcessError:
         pass
     return None
