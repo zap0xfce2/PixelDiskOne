@@ -7,14 +7,12 @@ def read(tag_id, db_file="NFC-Tags.db"):
     sql = sqlite3.connect(db_file)
     db = sql.cursor()
 
-    Console.info(tag_id)
-    tag_id = re.sub(r"\W+", "", tag_id)  # Entfernt alle nicht-alphanumerischen Zeichen
-    tag_id = int(tag_id)
+    # Entfernt alle nicht-alphanumerischen Zeichen
+    tag_id = re.sub(r"\W+", "", tag_id)
     suche = (tag_id,)
     db.execute("SELECT command FROM nfc_tags WHERE id=?", suche)
 
     result = db.fetchone()  # Ergebnis abrufen
-    Console.info(result)
 
     sql.close()  # Verbindung schließen
 
