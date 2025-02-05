@@ -1,6 +1,6 @@
 #/bin/bash
 
-echo "Updating PixelDiskOne from source..."
+echo -e "\e[1;31mUpdating PixelDiskOne from source...\e[0m\n"
 
 git clean -df
 git reset --hard HEAD
