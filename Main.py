@@ -11,26 +11,21 @@ import shlex
 
 def read_nfc_tag():
     try:
-        # Versuch, den Tag zu lesen und den Inhalt zurückzugeben
-        result = subprocess.run(
+        subprocess.run(
             ["nfc-mfultralight", "r", "nfc.dump"],
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        if result.returncode == 0:
-            with open("nfc.dump", "rb") as file:  # Lese im Binärmodus
-                binary_content = file.read()
-                # Extrahiere lesbare Zeichenketten aus den Binärdaten
-                readable_strings = re.findall(
-                    b"[ -~]{1,}", binary_content
-                )  # Sucht nach druckbaren ASCII-Zeichen
-                # Dekodiere die Bytes zu Strings und füge sie zu einem großen String zusammen
-                return "\n".join(
-                    [string.decode("utf-8") for string in readable_strings]
-                )
+
+        with open("nfc.dump", "rb") as file:
+            for line in file:
+                if b"T" in line:
+                    return line.split(b"T", 1)[1].strip().decode("utf-8")
+
     except subprocess.CalledProcessError:
         pass
+
     return None
 
 
