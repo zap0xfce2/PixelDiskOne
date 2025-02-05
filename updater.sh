@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 echo -e "\e[1;31mUpdating PixelDiskOne from source...\e[0m\n"
 

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # Erstellt von Zap0xfce2 im Februar 2025
 
 import subprocess
