@@ -45,7 +45,7 @@ def process_content(content):
 
 last_content = ""
 while True:
-    Console.info(Database.read(1))
+    # Console.info(Database.read(1))
     current_content = read_nfc_tag()
     if current_content:
         processed_content = process_content(current_content)
