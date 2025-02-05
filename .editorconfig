@@ -1,0 +1,18 @@
+# Oberste EditorConfig Datei
+root = true
+
+# Unix-style newlines mit einem Zeilenumbruch am Ende der Datei
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# 4 Leerzeichen Einrückung
+[*.{py}]
+indent_style = space
+indent_size = 4
+
+# Markdown-Dateien, Ausnahme für das Trimmen von Leerzeichen am Zeilenende
+[*.md]
+trim_trailing_whitespace = false

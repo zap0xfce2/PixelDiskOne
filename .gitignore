@@ -1,0 +1,6 @@
+__pycache__
+.env
+Poc's
+.smbdelete*
+DB.dump
+.vscode
