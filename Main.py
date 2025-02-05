@@ -7,6 +7,7 @@ import re
 import Console
 import Database
 import shlex
+import signal
 
 
 def read_nfc_tag():
@@ -37,7 +38,6 @@ def read_nfc_tag():
 
 
 def process_content(content):
-    # Entferne 'en' am Anfang und ein spezifisches 'Q' am Ende der zweiten Zeile
     lines = content.split("\n")
     processed_lines = [line[2:] if line.startswith("en") else line for line in lines]
     if len(processed_lines) > 1:
@@ -46,6 +46,8 @@ def process_content(content):
 
 
 last_content = ""
+last_process = None  # Hier speichern wir den letzten gestarteten Prozess
+
 while True:
     current_content = read_nfc_tag()
     if current_content:
@@ -54,18 +56,29 @@ while True:
             Console.info("Neuer Tag gefunden oder Inhalt hat sich geändert.")
             last_content = processed_content
 
+            # Falls ein alter Prozess läuft, beende ihn
+            if last_process and last_process.poll() is None:
+                Console.info(f"Beende vorherigen Prozess: {last_process.pid}")
+                last_process.terminate()  # Beendet den Prozess sauber
+                try:
+                    last_process.wait(timeout=5)  # Warte bis der Prozess beendet ist
+                except subprocess.TimeoutExpired:
+                    Console.warning("Prozess reagiert nicht, erzwinge Beendigung...")
+                    last_process.kill()  # Erzwinge das Beenden
+
             command = Database.read(processed_content)
             if command:
                 try:
-                    Console.info(f"Führe Befehl aus: {command}")
-                    subprocess.run(shlex.split(command), check=True)
-                except subprocess.CalledProcessError as e:
-                    Console.error(f"Fehler beim Ausführen: {e}")
+                    Console.info(f"Starte neuen Prozess: {command}")
+                    last_process = subprocess.Popen(
+                        shlex.split(command)
+                    )  # Neuer Prozess wird gestartet
+                except Exception as e:
+                    Console.error(f"Fehler beim Starten des Prozesses: {e}")
         else:
             Console.info(
                 "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
             )
-            # subprocess.run(shlex.split("killall retroarch"), check=True)
     else:
         Console.info("Kein Tag gefunden. Warte 1 Sekunde...")
     time.sleep(1)
