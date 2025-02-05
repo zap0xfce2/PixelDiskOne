@@ -61,10 +61,11 @@ while True:
                     subprocess.run(shlex.split(command), check=True)
                 except subprocess.CalledProcessError as e:
                     Console.error(f"Fehler beim Ausführen: {e}")
-        # else:
-        #     Console.info(
-        #         "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
-        #     )
+        else:
+            Console.info(
+                "Der gelesene Inhalt ist identisch mit dem letzten. Warte auf ein neues Tag..."
+            )
+            # subprocess.run(shlex.split("killall retroarch"), check=True)
     else:
         Console.info("Kein Tag gefunden. Warte 1 Sekunde...")
     time.sleep(1)
