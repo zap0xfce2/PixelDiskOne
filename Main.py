@@ -51,7 +51,7 @@ def process_content(content):
             "Q"
         )  # Falls vorhanden, "Q" entfernen
 
-    return processed_lines
+    return "\n".join(processed_lines)
 
 
 last_content = ""
@@ -71,13 +71,12 @@ while True:
             last_content = processed_content
 
             # Falls ein alter Prozess läuft, beende ihn
-            if last_process and last_process.poll() is None:
-                Console.info(f"Beende laufenden Prozess: {last_process.pid}")
-                last_process.terminate()
-                last_process.wait()
+            # if last_process and last_process.poll() is None:
+            #     Console.info(f"Beende laufenden Prozess: {last_process.pid}")
+            #     last_process.terminate()
+            #     last_process.wait()
 
             # Neuen Befehl aus Datenbank abrufen und Prozess starten
-            Console.info(processed_content)
             command = Database.read(processed_content)
             if command:
                 try:
@@ -98,4 +97,3 @@ while True:
             last_process.wait()
             last_process = None
             last_content = ""
-    time.sleep(3)
