@@ -81,7 +81,6 @@ while True:
             Notification.send(
                 "Diskette entfernt",
                 "Das Spiel wurde beendet da die Diskette entfernt wurde.",
-                "dialog-information",
                 "floppy-disk.png",
             )
             last_process.terminate()
