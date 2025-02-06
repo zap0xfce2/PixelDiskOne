@@ -27,10 +27,11 @@ def read_nfc_tag():
                     )
 
                     # Suche nach "en" und nimm nur die 3 Zeichen danach
-                    match = re.search(r"en(.{3})", content)
-                    if match:
-                        return match.group(1)  # Nur die drei Zeichen nach "en"
+                    # match = re.search(r"en(.{3})", content)
+                    # if match:
+                    #     return match.group(1)  # Nur die drei Zeichen nach "en"
 
+                    Console.log(content)
                     return content  # Falls "en" nicht existiert, gib den Originalinhalt zurück
     except subprocess.CalledProcessError:
         pass
@@ -68,6 +69,7 @@ while True:
                 last_process.wait()
 
             # Neuen Befehl aus Datenbank abrufen und Prozess starten
+            Console.log(processed_content)
             command = Database.read(processed_content)
             if command:
                 try:
