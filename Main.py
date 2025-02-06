@@ -2,12 +2,10 @@
 # Erstellt von Zap0xfce2 im Februar 2025
 
 import subprocess
-import time
 import re
 import Console
 import Database
 import shlex
-import signal
 import Notification
 
 

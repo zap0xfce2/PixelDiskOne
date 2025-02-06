@@ -13,8 +13,6 @@ def read(tag_id, db_file="NFC-Tags.db"):
     db.execute("SELECT command FROM nfc_tags WHERE id=?", suche)
 
     result = db.fetchone()
-
-    # Verbindung schließen
     sql.close()
 
     if result:
@@ -25,5 +23,4 @@ def read(tag_id, db_file="NFC-Tags.db"):
             f"Es existiert kein Datenbankeintrag für die ID {tag_id}!",
             "dialog-warning",
         )
-        # hier muss anschließend das nfc.dump entfernt werden
         return None
