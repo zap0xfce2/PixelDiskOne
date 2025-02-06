@@ -51,7 +51,7 @@ def process_content(content):
             "Q"
         )  # Falls vorhanden, "Q" entfernen
 
-    return "\n".join(processed_lines)
+    return processed_lines
 
 
 last_content = ""
