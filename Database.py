@@ -1,6 +1,6 @@
 import sqlite3
-import Console
 import re
+import Notification
 
 
 def read(tag_id, db_file="NFC-Tags.db"):
@@ -12,12 +12,17 @@ def read(tag_id, db_file="NFC-Tags.db"):
     suche = (tag_id,)
     db.execute("SELECT command FROM nfc_tags WHERE id=?", suche)
 
-    result = db.fetchone()  # Ergebnis abrufen
+    result = db.fetchone()
 
-    sql.close()  # Verbindung schließen
+    # Verbindung schließen
+    sql.close()
 
-    if result:  # Prüfen, ob ein Ergebnis existiert
+    if result:
         return result[0]
     else:
-        Console.info(f"Kein Eintrag für ID {tag_id} gefunden.")
-        return None  # Falls kein Eintrag existiert, None zurückgeben oder eine Fehlermeldung ausgeben
+        Notification.send(
+            "Datensatz nicht gefunden",
+            f"Es existiert kein Datenbankeintrag für die ID {tag_id}!",
+            "dialog-warning",
+        )
+        return None

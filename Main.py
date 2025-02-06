@@ -8,6 +8,7 @@ import Console
 import Database
 import shlex
 import signal
+import Notification
 
 
 def read_nfc_tag():
@@ -46,10 +47,10 @@ def process_content(content):
 
 
 last_content = ""
-last_process = None  # Hier speichern wir den letzten gestarteten Prozess
-
-last_content = ""
+# Hier speichern wir den letzten gestarteten Prozess
 last_process = None
+
+# nfc.dump einmalig beim start entfernen
 
 while True:
     current_content = read_nfc_tag()
@@ -58,7 +59,7 @@ while True:
         processed_content = process_content(current_content)
 
         if processed_content != last_content:
-            Console.info("Neues Tag erkannt.")
+            # Neue Diskette erkannt
             last_content = processed_content
 
             # Falls ein alter Prozess läuft, beende ihn
@@ -71,17 +72,18 @@ while True:
             command = Database.read(processed_content)
             if command:
                 try:
-                    Console.info(f"Starte neuen Prozess: {command}")
+                    Console.info(f"Starte: {command}")
                     last_process = subprocess.Popen(shlex.split(command))
                 except Exception as e:
-                    Console.error(f"Fehler beim Starten des Prozesses: {e}")
+                    Console.error(f"Fehler beim Starten: {e}")
+                    Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
     else:
-        # Falls kein Tag mehr erkannt wird, beende den laufenden Prozess
+        # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
         if last_process and last_process.poll() is None:
-            Console.info(f"Tag entfernt – beende Prozess: {last_process.pid}")
+            Notification.send(
+                "Diskette entfernt", "Die Diskette wurde entfernt!", "./floppy-disk.png"
+            )
             last_process.terminate()
             last_process.wait()
             last_process = None
             last_content = ""
-
-    # time.sleep(1)
