@@ -16,14 +16,14 @@ ls -1 ~/snap/retroarch/current/.config/retroarch/cores/*.so | xargs -n 1 basenam
 
 ### Datenbankeintrag erstellen
 
-Erstelle nun einen Datenbankeintrag in die Datei `NFC-Tags.db`
+Erstelle nun einen Datenbankeintrag in die Datei `NFC-Tags.db`.
 Ein Beispieleintrag für das NES sieht so aus:
 
 ```text
 retroarch -L "mesen_libretro.so" "/home/retro/Roms/rom.nes"
 ```
 
-Hier könnte man auch andere Emulatoren oder Steam Spiele starten.
+Hier könnte man auch andere Emulatoren oder Steam Spiele hinzufügen um diese zu starten.
 
 ### NFC-Tag erstellen
 
