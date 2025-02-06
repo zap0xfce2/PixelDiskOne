@@ -16,7 +16,7 @@ ls -1 ~/snap/retroarch/current/.config/retroarch/cores/*.so | xargs -n 1 basenam
 
 ### Datenbankeintrag erstellen
 
-Erstelle nun einen Datenbankeintrag in die Datei `NFC-Tags.db`.
+Erstelle nun einen Datenbankeintrag in die SQLite Datei `NFC-Tags.db`.
 Ein Beispieleintrag für das NES sieht so aus:
 
 ```text
