@@ -19,5 +19,6 @@ def read(tag_id, db_file="NFC-Tags.db"):
             "Datensatz nicht gefunden",
             f"Es existiert kein Datenbankeintrag für die ID {tag_id}!",
             "dialog-warning",
+            "10000",
         )
         return None

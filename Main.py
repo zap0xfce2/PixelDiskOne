@@ -54,7 +54,7 @@ def process_nfc_content(content):
 
 
 last_content = ""
-# Hier speichern wir den letzten gestarteten Prozess
+# für den letzten gestarteten Prozess
 last_process = None
 
 # nfc.dump einmalig beim Start entfernen, falls vorhanden
