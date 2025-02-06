@@ -78,7 +78,12 @@ while True:
     else:
         # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
         if last_process and last_process.poll() is None:
-            Notification.send("Diskette entfernt", "xxx")
+            Notification.send(
+                "Diskette entfernt",
+                "Das Spiel wurde beendet da die Diskette entfernt wurde.",
+                "dialog-information",
+                "floppy-disk.png",
+            )
             last_process.terminate()
             last_process.wait()
             last_process = None
