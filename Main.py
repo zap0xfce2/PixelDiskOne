@@ -32,7 +32,7 @@ def read_nfc_tag():
                     # if match:
                     #     return match.group(1)  # Nur die drei Zeichen nach "en"
 
-                    Console.log(content)
+                    Console.info(content)
                     return content  # Falls "en" nicht existiert, gib den Originalinhalt zurück
     except subprocess.CalledProcessError:
         pass
@@ -70,7 +70,7 @@ while True:
                 last_process.wait()
 
             # Neuen Befehl aus Datenbank abrufen und Prozess starten
-            Console.log(processed_content)
+            Console.info(processed_content)
             command = Database.read(processed_content)
             if command:
                 try:
