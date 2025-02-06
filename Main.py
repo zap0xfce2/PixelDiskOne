@@ -37,14 +37,19 @@ def process_content(content):
     for line in lines:
         match = re.search(r"en(.{3})", line)
         if match:
-            processed_lines.append(match.group(1))  # Nur die 3 Zeichen nach "en"
+            cleaned_line = match.group(1)
         else:
-            processed_lines.append(line[2:] if line.startswith("en") else line)
+            cleaned_line = line[2:] if line.startswith("en") else line
+
+        # Entfernt nicht-alphanumerische Zeichen
+        cleaned_line = re.sub(r"\W+", "", cleaned_line)
+
+        processed_lines.append(cleaned_line)
 
     if len(processed_lines) > 1:
         processed_lines[1] = processed_lines[1].rstrip(
             "Q"
-        )  # Falls vorhanden, "Q" am Ende der zweiten Zeile entfernen
+        )  # Falls vorhanden, "Q" entfernen
 
     return "\n".join(processed_lines)
 
