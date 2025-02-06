@@ -25,4 +25,5 @@ def read(tag_id, db_file="NFC-Tags.db"):
             f"Es existiert kein Datenbankeintrag für die ID {tag_id}!",
             "dialog-warning",
         )
+        # hier muss anschließend das nfc.dump entfernt werden
         return None
