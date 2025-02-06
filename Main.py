@@ -83,7 +83,7 @@ while True:
             Notification.send(
                 "Diskette entfernt",
                 "Das Spiel wurde beendet da die Diskette entfernt wurde.",
-                "floppy-disk.png",
+                "/home/retro/PixelDiskOne/floppy-disk.png",
             )
             last_process.terminate()
             last_process.wait()
