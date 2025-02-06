@@ -21,19 +21,10 @@ def read_nfc_tag():
             stderr=subprocess.DEVNULL,
         )
         with open("nfc.dump", "rb") as file:
-            for line in file:
-                if b"T" in line:
-                    content = (
-                        line.split(b"T", 1)[1].strip().decode("utf-8", errors="ignore")
-                    )
-
-                    # Suche nach "en" und nimm nur die 3 Zeichen danach
-                    # match = re.search(r"en(.{3})", content)
-                    # if match:
-                    #     return match.group(1)  # Nur die drei Zeichen nach "en"
-
-                    Console.info(content)
-                    return content  # Falls "en" nicht existiert, gib den Originalinhalt zurück
+            content = file.read().decode("utf-8", errors="ignore").strip()
+            return process_content(
+                content
+            )  # Direkt die aufbereitete Version zurückgeben
     except subprocess.CalledProcessError:
         pass
     return None
@@ -41,9 +32,20 @@ def read_nfc_tag():
 
 def process_content(content):
     lines = content.split("\n")
-    processed_lines = [line[2:] if line.startswith("en") else line for line in lines]
+    processed_lines = []
+
+    for line in lines:
+        match = re.search(r"en(.{3})", line)
+        if match:
+            processed_lines.append(match.group(1))  # Nur die 3 Zeichen nach "en"
+        else:
+            processed_lines.append(line[2:] if line.startswith("en") else line)
+
     if len(processed_lines) > 1:
-        processed_lines[1] = processed_lines[1].rstrip("Q")
+        processed_lines[1] = processed_lines[1].rstrip(
+            "Q"
+        )  # Falls vorhanden, "Q" am Ende der zweiten Zeile entfernen
+
     return "\n".join(processed_lines)
 
 
