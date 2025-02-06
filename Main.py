@@ -3,6 +3,7 @@
 
 import subprocess
 import re
+import time
 import Console
 import Database
 import shlex
@@ -90,3 +91,4 @@ while True:
             last_process.wait()
             last_process = None
             last_content = ""
+    time.sleep(3)
