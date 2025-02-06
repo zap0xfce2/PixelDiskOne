@@ -7,6 +7,7 @@ import Console
 import Database
 import shlex
 import Notification
+import os
 
 
 def read_nfc_tag():
@@ -79,9 +80,9 @@ while True:
         # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
         if last_process and last_process.poll() is None:
             Notification.send(
-                "Diskette entfernt",
+                "Spiel beendet",
                 "Das Spiel wurde beendet da die Diskette entfernt wurde.",
-                "/home/retro/PixelDiskOne/floppy-disk.png",
+                os.path.join(os.getcwd(), "floppy-disk.png"),
             )
             last_process.terminate()
             last_process.wait()

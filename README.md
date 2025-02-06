@@ -11,20 +11,7 @@ Die PixelDiskOne ist eine Spielekonsole welche als Medium 3,5" Disketten nutzt.
 while true; do ./updater.sh; sleep 60; done
 ```
 
-```bash
-python3 Main.py
-```
-
 
 ```bash
-pip install -r requirements.txt
-```
-
-```bash
-# notificaton
-notify-send -i dialog-information -t 5000 "Titel" "Nachricht mit Icon und Timeout"
-```
-
-```bash
-find ~ -maxdepth 12 -type f -name "*libretro.so"
+ls -1 ~/snap/retroarch/current/.config/retroarch/cores/*.so | xargs -n 1 basename
 ```
