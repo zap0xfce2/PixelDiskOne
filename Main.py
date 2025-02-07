@@ -3,7 +3,6 @@
 
 import subprocess
 import re
-import time
 import Console
 import Database
 import shlex
