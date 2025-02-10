@@ -8,6 +8,7 @@ import Database
 import shlex
 import Notification
 import os
+import time
 
 
 def read_nfc_tag():
@@ -98,3 +99,4 @@ while True:
             last_process.wait()
             last_process = None
             last_content = ""
+            time.sleep(3)
