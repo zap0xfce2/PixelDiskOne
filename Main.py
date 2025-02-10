@@ -96,3 +96,5 @@ while True:
             last_content = ""
             # Kurzer cooldown um die Nachricht zu lesen
             time.sleep(2)
+    # Kurzer cooldown
+    time.sleep(1)
