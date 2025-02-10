@@ -73,10 +73,10 @@ while True:
 
             # Falls ein alter Prozess läuft, beende ihn
             # für den fall das man Diksketten sehr schnell wechselt
-            if last_process and last_process.poll() is None:
-                Console.info(f"Beende laufenden Prozess: {last_process.pid}")
-                last_process.terminate()
-                last_process.wait()
+            # if last_process and last_process.poll() is None:
+            #     Console.info(f"Beende laufenden Prozess: {last_process.pid}")
+            #     last_process.terminate()
+            #     last_process.wait()
 
             # Neuen Befehl aus Datenbank abrufen und Prozess starten
             command = Database.read(processed_content)
