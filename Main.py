@@ -80,8 +80,6 @@ while True:
                 except Exception as e:
                     Console.error(f"Fehler beim Starten: {e}")
                     Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
-                    # Kurzer cooldown um die Nachricht zu lesen
-                    time.sleep(2)
     else:
         # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
         if last_process and last_process.poll() is None:
@@ -94,7 +92,3 @@ while True:
             last_process.wait()
             last_process = None
             last_content = ""
-            # Kurzer cooldown um die Nachricht zu lesen
-            time.sleep(2)
-    # Kurzer cooldown
-    time.sleep(1)
