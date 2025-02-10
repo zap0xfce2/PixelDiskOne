@@ -8,7 +8,6 @@ import Database
 import shlex
 import Notification
 import os
-import time
 
 
 def read_nfc_tag():
