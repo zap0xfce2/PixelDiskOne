@@ -71,13 +71,6 @@ while True:
             # Neue Diskette erkannt
             last_content = processed_content
 
-            # Falls ein alter Prozess läuft, beende ihn
-            # für den fall das man Diksketten sehr schnell wechselt
-            # if last_process and last_process.poll() is None:
-            #     Console.info(f"Beende laufenden Prozess: {last_process.pid}")
-            #     last_process.terminate()
-            #     last_process.wait()
-
             # Neuen Befehl aus Datenbank abrufen und Prozess starten
             command = Database.read(processed_content)
             if command:
@@ -87,6 +80,8 @@ while True:
                 except Exception as e:
                     Console.error(f"Fehler beim Starten: {e}")
                     Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
+                    # Kurzer cooldown um die Nachricht zu lesen
+                    time.sleep(2)
     else:
         # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
         if last_process and last_process.poll() is None:
@@ -99,4 +94,5 @@ while True:
             last_process.wait()
             last_process = None
             last_content = ""
-            time.sleep(3)
+            # Kurzer cooldown um die Nachricht zu lesen
+            time.sleep(2)
