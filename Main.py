@@ -8,86 +8,93 @@ import Database
 import shlex
 import Notification
 import os
+import nfc  # type: ignore
+import time
+
+BACKEND = "usb:072f:2200"
+_current_proc = None
+_tag_present = False
 
 
-def read_nfc_tag():
-    try:
-        # Versuch, den Tag zu lesen und den Inhalt zurückzugeben
-        subprocess.run(
-            ["nfc-mfultralight", "r", "nfc.dump"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        with open("nfc.dump", "rb") as file:
-            content = file.read().decode("utf-8", errors="ignore").strip()
-            return process_nfc_content(
-                content
-            )  # Direkt die aufbereitete Version zurückgeben
-    except subprocess.CalledProcessError:
-        pass
-    return None
+def start_process(tag):
+    global _current_proc
+    # Tag-Info auslesen
+    tag_uid = getattr(tag, "identifier", b"").hex()
+    tag_value = None
 
+    if getattr(tag, "ndef", None):
+        for rec in tag.ndef.records:
+            if hasattr(rec, "text"):
+                text = rec.text.strip()
+                m = re.search(r"\d+", text)
+                tag_value = m.group(0) if m else text
+                break
 
-def process_nfc_content(content):
-    lines = content.split("\n")
-    processed_lines = []
+    Console.info(f"Diskette erkannt → UID: {tag_uid}, Wert: {tag_value}")
 
-    for line in lines:
-        match = re.search(r"en(.{3})", line)
-        if match:
-            cleaned_line = match.group(1)
-        else:
-            cleaned_line = line[2:] if line.startswith("en") else line
-
-        # Entfernt nicht-alphanumerische Zeichen
-        cleaned_line = re.sub(r"\W+", "", cleaned_line)
-        processed_lines.append(cleaned_line)
-
-    if len(processed_lines) > 1:
-        processed_lines[1] = processed_lines[1].rstrip(
-            "Q"
-        )  # Falls vorhanden, "Q" entfernen
-
-    return "\n".join(processed_lines)
-
-
-last_content = ""
-# für den letzten gestarteten Prozess
-last_process = None
-
-# nfc.dump einmalig beim Start entfernen, falls vorhanden
-if os.path.exists("nfc.dump"):
-    os.remove("nfc.dump")
-
-while True:
-    current_content = read_nfc_tag()
-
-    if current_content:
-        processed_content = process_nfc_content(current_content)
-
-        if processed_content != last_content:
-            # Neue Diskette erkannt
-            last_content = processed_content
-
-            # Neuen Befehl aus Datenbank abrufen und Prozess starten
-            command = Database.read(processed_content)
-            if command:
-                try:
-                    Console.info(f"Starte: {command}")
-                    last_process = subprocess.Popen(shlex.split(command))
-                except Exception as e:
-                    Console.error(f"Fehler beim Starten: {e}")
-                    Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
+    if _current_proc is None:
+        command = Database.read(tag_value)
+        if command:
+            try:
+                Console.info(f"Starte: {command}")
+                _current_proc = subprocess.Popen(shlex.split(command))
+            except Exception as e:
+                Console.error(f"Fehler beim Starten: {e}")
+                Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
     else:
-        # Falls keine Diskette mehr erkannt wird, beende den laufenden Prozess
-        if last_process and last_process.poll() is None:
-            Notification.send(
-                "Spiel beendet",
-                "Das Spiel wurde beendet da die Diskette entfernt wurde.",
-                os.path.join(os.getcwd(), "floppy-disk.png"),
+        pass
+
+
+def stop_process():
+    global _current_proc
+    if _current_proc:
+        Console.info("Diskette entfernt → beende Prozess …")
+        Notification.send(
+            "Spiel beendet",
+            "Das Spiel wurde beendet da die Diskette entfernt wurde.",
+            os.path.join(os.getcwd(), "floppy-disk.png"),
+        )
+        _current_proc.terminate()
+        try:
+            _current_proc.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            _current_proc.kill()
+        _current_proc = None
+
+
+def on_connect(tag):
+    global _tag_present
+    if _tag_present:
+        return True
+    _tag_present = True
+    start_process(tag)
+    return True
+
+
+def on_release(tag):
+    global _tag_present
+    _tag_present = False
+    stop_process()
+    return True
+
+
+Console.info("PixelDiskOne gestartet, warte auf Disketten!")
+with nfc.ContactlessFrontend(BACKEND) as clf:
+    while True:
+        try:
+            clf.connect(
+                rdwr={
+                    "on-connect": on_connect,
+                    "on-release": on_release,
+                    "beep-on-connect": False,
+                }
             )
-            last_process.terminate()
-            last_process.wait()
-            last_process = None
-            last_content = ""
+            time.sleep(0.05)
+        except KeyboardInterrupt:
+            stop_process()
+            break
+        except Exception as e:
+            Console.error(f"Fehler: {e}")
+            Notification.send("Fehler", f"{e}", "dialog-error")
+            stop_process()
+            time.sleep(0.2)
