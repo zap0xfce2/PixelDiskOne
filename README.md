@@ -11,7 +11,7 @@ Um die Zeit für Kinder zu begrenzen wurde Timekpr-nExT installiert. Eine Anleit
 ### Core ermitteln
 
 ```bash
-ls -1 ~/snap/retroarch/current/.config/retroarch/cores/*.so | xargs -n 1 basename
+ls -1 ~/.config/retroarch/cores/*.so | xargs -n 1 basename
 ```
 
 ### Datenbankeintrag erstellen
