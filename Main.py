@@ -50,8 +50,8 @@ def stop_process():
     if _current_proc:
         Console.info("Diskette entfernt → beende Prozess …")
         Notification.send(
-            "Spiel beendet",
-            "Das Spiel wurde beendet da die Diskette entfernt wurde.",
+            "Diskette entfernt",
+            "Das Programm wurde beendet da die Diskette entfernt wurde.",
             os.path.join(os.getcwd(), "floppy-disk.png"),
         )
         _current_proc.terminate()
