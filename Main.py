@@ -37,7 +37,10 @@ def start_process(tag):
         if command:
             try:
                 Console.info(f"Starte: {command}")
-                _current_proc = subprocess.Popen(shlex.split(command))
+                env = os.environ.copy()
+                env.setdefault("DISPLAY", ":0")
+                env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+                _current_proc = subprocess.Popen(shlex.split(command), env=env)
             except Exception as e:
                 Console.error(f"Fehler beim Starten: {e}")
                 Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
