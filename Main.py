@@ -7,6 +7,7 @@ import Console
 import Database
 import shlex
 import Notification
+import signal
 import os
 import nfc  # type: ignore
 import time
@@ -37,7 +38,9 @@ def start_process(tag):
         if command:
             try:
                 Console.info(f"Starte: {command}")
-                _current_proc = subprocess.Popen(shlex.split(command))
+                _current_proc = subprocess.Popen(
+                    shlex.split(command), preexec_fn=os.setsid
+                )
             except Exception as e:
                 Console.error(f"Fehler beim Starten: {e}")
                 Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
@@ -48,17 +51,33 @@ def start_process(tag):
 def stop_process():
     global _current_proc
     if _current_proc:
-        Console.info("Diskette entfernt → beende Prozess …")
+        Console.info("Diskette entfernt → beende Prozessgruppe …")
+        try:
+            pgid = os.getpgid(_current_proc.pid)
+        except ProcessLookupError:
+            _current_proc = None
+            return
+
         Notification.send(
             "Diskette entfernt",
             "Das Programm wurde beendet da die Diskette entfernt wurde.",
             os.path.join(os.getcwd(), "floppy-disk.png"),
         )
-        _current_proc.terminate()
+
+        try:
+            os.killpg(pgid, signal.SIGTERM)
+        except ProcessLookupError:
+            _current_proc = None
+            return
+
         try:
             _current_proc.wait(timeout=2)
         except subprocess.TimeoutExpired:
-            _current_proc.kill()
+            try:
+                os.killpg(pgid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
         _current_proc = None
 
 
