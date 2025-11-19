@@ -41,6 +41,9 @@ def start_process(tag):
                 _current_proc = subprocess.Popen(
                     shlex.split(command), preexec_fn=os.setsid
                 )
+                Console.info(
+                    f"Gestartet: PID={_current_proc.pid}, PGID={os.getpgid(_current_proc.pid)}"
+                )
             except Exception as e:
                 Console.error(f"Fehler beim Starten: {e}")
                 Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
