@@ -53,35 +53,44 @@ def start_process(tag):
 
 def stop_process():
     global _current_proc
-    if _current_proc:
-        Console.info("Diskette entfernt → beende Prozessgruppe …")
-        try:
-            pgid = os.getpgid(_current_proc.pid)
-        except ProcessLookupError:
-            _current_proc = None
-            return
+    if not _current_proc:
+        return
 
-        Notification.send(
-            "Diskette entfernt",
-            "Das Programm wurde beendet da die Diskette entfernt wurde.",
-            os.path.join(os.getcwd(), "floppy-disk.png"),
-        )
-
-        try:
-            os.killpg(pgid, signal.SIGTERM)
-        except ProcessLookupError:
-            _current_proc = None
-            return
-
-        try:
-            _current_proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            try:
-                os.killpg(pgid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-
+    try:
+        pgid = os.getpgid(_current_proc.pid)
+    except ProcessLookupError:
+        Console.info("Prozessgruppe existiert nicht mehr, nichts zu tun.")
         _current_proc = None
+        return
+
+    Console.info(f"Diskette entfernt → beende Prozessgruppe {pgid} …")
+
+    Notification.send(
+        "Diskette entfernt",
+        "Das Programm wurde beendet da die Diskette entfernt wurde.",
+        os.path.join(os.getcwd(), "floppy-disk.png"),
+    )
+
+    # Erst freundlich, dann brutal, immer mit Logging
+    for sig, name in ((signal.SIGTERM, "SIGTERM"), (signal.SIGKILL, "SIGKILL")):
+        try:
+            Console.info(f"Sende {name} an Prozessgruppe {pgid} …")
+            os.killpg(pgid, sig)
+        except ProcessLookupError:
+            Console.info(f"Prozessgruppe {pgid} existiert nicht mehr.")
+            break
+
+        # kurz warten, ob sich was erledigt
+        try:
+            _current_proc.wait(timeout=1)
+            Console.info("Hauptprozess ist beendet.")
+            break
+        except subprocess.TimeoutExpired:
+            Console.info(
+                f"Hauptprozess lebt nach {name} noch, versuche nächsten Schritt …"
+            )
+
+    _current_proc = None
 
 
 def on_connect(tag):
