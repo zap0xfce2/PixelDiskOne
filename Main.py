@@ -65,11 +65,11 @@ def stop_process():
 
     Console.info(f"Diskette entfernt → beende Prozessgruppe {pgid} …")
 
-    Notification.send(
-        "Diskette entfernt",
-        "Das Programm wurde beendet da die Diskette entfernt wurde.",
-        os.path.join(os.getcwd(), "floppy-disk.png"),
-    )
+    # Notification.send(
+    #     "Diskette entfernt",
+    #     "Das Programm wurde beendet da die Diskette entfernt wurde.",
+    #     os.path.join(os.getcwd(), "floppy-disk.png"),
+    # )
 
     # Erst freundlich, dann brutal, immer mit Logging
     for sig, name in ((signal.SIGTERM, "SIGTERM"), (signal.SIGKILL, "SIGKILL")):
