@@ -5,6 +5,12 @@
 
 set -ou pipefail
 
+# Secrets aus .env laden (gleiches Verzeichnis wie das Skript)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/.env" ]]; then
+  source "$SCRIPT_DIR/.env"
+fi
+
 : "${1:?Playlist-ID fehlt}"
 
 command -v mpv     >/dev/null || { echo "mpv nicht gefunden"     >&2; exit 1; }
@@ -22,7 +28,7 @@ touch "$MUTE_FILE"
 SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
 VOLUME="${2:-100}"
 
-INVIDIOUS_BASE_URL="https://invidious.chaos-gate.is-a-geek.net"
+INVIDIOUS_BASE_URL="${INVIDIOUS_BASE_URL:-https://inv.nadeko.net}"
 WINDOW_TITLE="YoutubePlayer"
 
 splash_pid=""
