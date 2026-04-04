@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Startet zufällig ein Youtube Video aus einer Playlist.
 # Zeigt vorher sofort einen Splashscreen, bis das Video startet.
-# Verwendung: YoutubePlayer.sh <PLAYLIST> <SPLASHGRAFIK>
+# Verwendung: YoutubePlayer.sh <PLAYLIST> [LAUTSTÄRKE]
 
 set -ou pipefail
 
@@ -19,10 +19,8 @@ PLAYLIST_ID="$1"
 MUTE_FILE="$HOME/.mute"
 touch "$MUTE_FILE"
 
-# Default Splash-Grafik (kann optional als 2. Argument überschrieben werden)
-DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
-SPLASH_PNG="${2:-$DEFAULT_SPLASH_PNG}"
-VOLUME="${3:-100}"
+SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
+VOLUME="${2:-100}"
 
 INVIDIOUS_BASE_URL="https://invidious.chaos-gate.is-a-geek.net"
 WINDOW_TITLE="YoutubePlayer"
