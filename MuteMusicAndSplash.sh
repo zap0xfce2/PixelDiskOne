@@ -11,7 +11,7 @@ TARGET_PROCS=("retroarch" "brave-browser" "xfce4-terminal" "steam" "zelda3")
 MUTE_FILE="$HOME/.mute"
 
 # Sink-Input application.names die geduckt werden sollen
-DUCK_NAMES=("backgroundmusic" "PixelDiskOne-Splash")
+DUCK_NAMES=("Backgroundmusic" "PixelDiskOne-Splash")
 
 DUCK_PERCENT=0     # Lautstärke bei aktivem Trigger (in %)
 FADE_DOWN_MS=100   # Fade-Down Gesamtdauer in Millisekunden
