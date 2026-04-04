@@ -13,6 +13,7 @@ if [[ -z "$EMBY_HOST" || -z "$API_KEY" ]]; then
 fi
 
 OPTIONS="-fs -loglevel quiet"
+MUTE_FILE="$HOME/.mute"
 
 # Hilfe-Text
 show_help() {
@@ -254,7 +255,8 @@ fi
 # Episode als gesehen markieren wenn ≥80% geschaut (nur bei --unseen)
 # Feuert bei normalem Ende UND bei Script-Kill (Ctrl+C, kill) — nicht bei kill -9
 _emby_mark_watched() {
-  trap - EXIT                        # Einmalig ausführen (Doppel-Schutz)
+  trap - EXIT INT TERM QUIT          # Einmalig ausführen (Doppel-Schutz)
+  rm -f "$MUTE_FILE" 2>/dev/null || true
   [[ "$UNSEEN" != true ]] && return  # Nur relevant bei --unseen
 
   local elapsed=$(( $(date +%s) - PLAY_START ))
@@ -271,8 +273,9 @@ _emby_mark_watched() {
     fi
   fi
 }
-trap '_emby_mark_watched' EXIT
+trap '_emby_mark_watched' EXIT INT TERM QUIT
 
 # 5. Abspielen und Laufzeit messen
+touch "$MUTE_FILE"
 PLAY_START=$(date +%s)
 ffplay $OPTIONS "$STREAM_URL"
