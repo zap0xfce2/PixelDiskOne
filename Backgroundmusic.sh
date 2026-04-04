@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-MUSIC_DIR="$HOME/backgroundmusic"
+MUSIC_DIR="$HOME/Musik"
 # wird application.name
 APP_NAME="backgroundmusic"
 # wird media.name
