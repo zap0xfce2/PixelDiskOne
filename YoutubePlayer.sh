@@ -22,6 +22,7 @@ touch "$MUTE_FILE"
 # Default Splash-Grafik (kann optional als 2. Argument überschrieben werden)
 DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
 SPLASH_PNG="${2:-$DEFAULT_SPLASH_PNG}"
+VOLUME="${3:-100}"
 
 INVIDIOUS_BASE_URL="https://invidious.chaos-gate.is-a-geek.net"
 WINDOW_TITLE="YoutubePlayer"
@@ -116,7 +117,7 @@ while true; do
   fi
 
   # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
-  mpv --fs --no-osc --osd-level=0 --keep-open=yes --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
+  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
