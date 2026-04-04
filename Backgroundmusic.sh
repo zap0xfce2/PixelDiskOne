@@ -3,9 +3,9 @@ set -euo pipefail
 
 MUSIC_DIR="$HOME/Musik"
 # wird application.name
-APP_NAME="Backgroundmusic"
+APP_NAME="backgroundmusic"
 # wird media.name
-TITLE_NAME="Backgroundmusic"
+TITLE_NAME="backgroundmusic"
 # Playlistpfad
 PLAYLIST_FILE="/tmp/backgroundmusic.m3u"
 # Mute-File (gleiche Quelle wie Mute-bgm-and-splash.sh)

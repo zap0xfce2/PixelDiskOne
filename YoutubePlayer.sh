@@ -120,8 +120,12 @@ while true; do
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
+  window_found=false
   for _ in {1..50}; do
-    xdotool search --name "^${WINDOW_TITLE}$" >/dev/null 2>&1 && break
+    if xdotool search --name "^${WINDOW_TITLE}$" >/dev/null 2>&1; then
+      window_found=true
+      break
+    fi
     sleep 0.05
   done
 
@@ -129,14 +133,13 @@ while true; do
 
   # Auf den Player warten; mpv bleibt am Ende stehen bis du schließt
   wait "$video_pid" 2>/dev/null
-  video_exit=$?
 
-  # Normales Beenden (User hat Fenster geschlossen) → fertig
-  if (( video_exit == 0 )); then
+  # Fenster war sichtbar → User hat geschlossen → fertig
+  if [[ "${window_found}" == true ]]; then
     exit 0
   fi
 
-  # Fehler → nächstes Video versuchen
-  echo "Wiedergabe fehlgeschlagen (Exit ${video_exit}) -> neu shufflen" >&2
+  # Fenster nie erschienen → Ladefehler → nächstes Video versuchen
+  echo "Stream konnte nicht gestartet werden -> neu shufflen" >&2
   start_splash
 done
