@@ -2,7 +2,7 @@
 # Startet die Neuste Folge der query sonst gestern, ...
 # Ignoriert die Version mit der Gebärdensprache
 # Zeigt vorher sofort einen Splashscreen, bis das Video startet.
-# Verwendung: MediathekPlayer.sh <QUERY> <KANAL> [--random] [SPLASHGRAFIK]
+# Verwendung: MediathekPlayer.sh <QUERY> <KANAL> [--random]
 
 set -euo pipefail
 
@@ -18,19 +18,15 @@ API_URL="https://mediathekviewweb.de/api/query"
 SIZE=20
 MAX_RANDOM_RETRIES=10
 
-# Args: <topic> <channel> [splash_png]
 TOPIC_QUERY="$1"
 CHANNEL_QUERY="${2:-KiKA}"
 
-# Optional: --random-Flag und Splash-Grafik
 DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
 RANDOM_MODE=0
 if [[ "${3:-}" == "--random" ]]; then
   RANDOM_MODE=1
-  SPLASH_PNG="${4:-$DEFAULT_SPLASH_PNG}"
-else
-  SPLASH_PNG="${3:-$DEFAULT_SPLASH_PNG}"
 fi
+SPLASH_PNG="$DEFAULT_SPLASH_PNG"
 
 # Mute-File für Ducking
 MUTE_FILE="$HOME/.mute"

@@ -16,7 +16,7 @@ rm -f "$HOME/.mute" 2>/dev/null || true
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
 
 # Updater & NFC Reader starten
-screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Updater.sh && ./Main.py"
+screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./PixelDiskOne-Updater.sh && ./Main.py"
 
 # Warten so das die Diskette geladen werden kann
 # somit kommt das Intro nur wenn keine Diskette beim

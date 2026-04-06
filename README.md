@@ -20,11 +20,61 @@ Erstelle nun einen Datenbankeintrag in die SQLite Datei `NFC-Tags.db`.
 Ein Beispieleintrag für das NES sieht so aus:
 
 ```text
-retroarch -L "mesen_libretro.so" "/home/retro/Roms/rom.nes"
+retroarch -L "mesen_libretro.so" "/home/retro/Roms/nes/Super Mario Bros. + Tetris + Nintendo World Cup (E) [!].nes""
 ```
 
-Hier könnte man auch andere Emulatoren oder Steam Spiele hinzufügen um diese zu starten.
+Ein Eintrag für ein Steam Spiel sieht dann z.B. so aus:
+
+```text
+/home/retro/PixelDiskOne/RunProtonGame.sh "/home/retro/Games/Subnautica/Subnautica.exe" "Proton 9.0 (Beta)"
+```
+
+Es können auch andere Emulatoren oder Scripte hinzugefügt um diese via Diskette zu starten.
 
 ### NFC-Tag erstellen
 
 Nun schreibt man die DatensatzID auf das NFC-Tag in einen Texteintrag. Hierfür kann man die App "NFC Tools" auf seinem Handy verwenden.
+
+## Erleuterung der Scripte
+
+Anbei eine unsortierte Kurzerläuterung der Scripte und Ihrer Funktion.
+
+### Backgroundmusic
+
+Aus einem Verzeichnis wird eine Playliste erstellt und anschließend die Musik zufällig abgespielt.
+
+### EmbyPlayer
+
+Steuert eine Emby Instanz an und Spielt deren Inhalte ab. Mit --help kann die Hilfe so wie Beispiele für den Aufruf angezeigt werden.
+
+### HomeButton
+
+Dient dazu eine URL auf den Homebutton der Fernbedienung zu legen.
+
+### MediathekPlayer
+
+Ein Script um Inhalte von https://mediathekviewweb.de abzuspielen.
+
+### MutMusicAndSplash
+
+Läuft im Hintergrund und fadet den Splash oder die Backgroundmusic ein oder aus. Je nachdem ob ein Content läuft oder nicht.
+
+### PixelDiskOne-Start
+
+Das Startscript für die PixelDiskOne. Von hier aus geht alles los.
+
+### RunProtonGame
+
+Dient zum starten von Windows Spielen via Proton.
+
+### PixelDiskOne-Updater
+
+Zieht die letze Version des Repos von Github.
+
+### VideoSplash
+
+Startet ein Video als Splashscreen indem es das Video auf den Desktophintergrund legt und im letzen Frame anhält.
+
+### YoutubePlayer
+
+Spielt ein Video oder eine Playlist (zufällige Videoauswahl) von YouTube ab.
