@@ -165,7 +165,7 @@ video_pid=$!
 # Sobald das Video-Fenster existiert, Splash beenden
 for _ in {1..50}; do
   xdotool search --name "^${WINDOW_TITLE}$" >/dev/null 2>&1 && break
-  sleep 0.05
+  sleep 0.1
 done
 
 stop_splash

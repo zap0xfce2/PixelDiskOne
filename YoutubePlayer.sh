@@ -131,7 +131,7 @@ while true; do
       window_found=true
       break
     fi
-    sleep 0.05
+    sleep 0.1
   done
 
   stop_splash
