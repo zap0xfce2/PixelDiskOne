@@ -7,6 +7,7 @@ import Console
 import Database
 import shlex
 import Notification
+import signal
 import os
 import nfc  # type: ignore
 import time
@@ -37,7 +38,12 @@ def start_process(tag):
         if command:
             try:
                 Console.info(f"Starte: {command}")
-                _current_proc = subprocess.Popen(shlex.split(command))
+                _current_proc = subprocess.Popen(
+                    shlex.split(command), preexec_fn=os.setsid
+                )
+                Console.info(
+                    f"Gestartet: PID={_current_proc.pid}, PGID={os.getpgid(_current_proc.pid)}"
+                )
             except Exception as e:
                 Console.error(f"Fehler beim Starten: {e}")
                 Notification.send("Fehler beim Starten", f"{e}", "dialog-error")
@@ -47,19 +53,44 @@ def start_process(tag):
 
 def stop_process():
     global _current_proc
-    if _current_proc:
-        Console.info("Diskette entfernt → beende Prozess …")
-        Notification.send(
-            "Diskette entfernt",
-            "Das Programm wurde beendet da die Diskette entfernt wurde.",
-            os.path.join(os.getcwd(), "floppy-disk.png"),
-        )
-        _current_proc.terminate()
-        try:
-            _current_proc.wait(timeout=2)
-        except subprocess.TimeoutExpired:
-            _current_proc.kill()
+    if not _current_proc:
+        return
+
+    try:
+        pgid = os.getpgid(_current_proc.pid)
+    except ProcessLookupError:
+        Console.info("Prozessgruppe existiert nicht mehr, nichts zu tun.")
         _current_proc = None
+        return
+
+    Console.info(f"Diskette entfernt → beende Prozessgruppe {pgid} …")
+
+    # Notification.send(
+    #     "Diskette entfernt",
+    #     "Das Programm wurde beendet da die Diskette entfernt wurde.",
+    #     os.path.join(os.getcwd(), "floppy-disk.png"),
+    # )
+
+    # Erst freundlich, dann brutal, immer mit Logging
+    for sig, name in ((signal.SIGTERM, "SIGTERM"), (signal.SIGKILL, "SIGKILL")):
+        try:
+            Console.info(f"Sende {name} an Prozessgruppe {pgid} …")
+            os.killpg(pgid, sig)
+        except ProcessLookupError:
+            Console.info(f"Prozessgruppe {pgid} existiert nicht mehr.")
+            break
+
+        # kurz warten, ob sich was erledigt
+        try:
+            _current_proc.wait(timeout=1)
+            Console.info("Hauptprozess ist beendet.")
+            break
+        except subprocess.TimeoutExpired:
+            Console.info(
+                f"Hauptprozess lebt nach {name} noch, versuche nächsten Schritt …"
+            )
+
+    _current_proc = None
 
 
 def on_connect(tag):
