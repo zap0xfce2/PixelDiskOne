@@ -84,7 +84,9 @@ pick_episode_before_date() {
     | sort_by(.timestamp) | reverse
     | map(select(.day <= $date_limit))
     | .[0]
-    | (.url_video_hd // .url_video // empty)
+    | [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
+    | select(.[0] != null)
+    | @tsv
   '
 }
 
@@ -112,15 +114,16 @@ resp="$(
     "$API_URL"
 )"
 
-mp4_url="$(printf '%s' "$resp" | pick_episode_before_date "$(date +%Y%m%d)")"
+IFS=$'\t' read -r mp4_url episode_date <<< "$(printf '%s' "$resp" | pick_episode_before_date "$(date +%Y%m%d)")"
 
 if (( RANDOM_MODE )); then
   total="$(printf '%s' "$resp" | jq '.result.queryInfo.resultCount')"
 
   mp4_url=""
+  episode_date=""
   for _ in $(seq 1 "$MAX_RANDOM_RETRIES"); do
     random_offset=$(( (RANDOM * 32768 + RANDOM) % total ))
-    mp4_url="$(
+    _result="$(
       curl -sS \
         -H 'content-type: application/json' \
         -H 'accept: application/json' \
@@ -144,10 +147,15 @@ if (( RANDOM_MODE )); then
       | jq -r '
           .result.results[0]
           | select((.title // "") | test("Gebärdensprache"; "i") | not)
-          | (.url_video_hd // .url_video // empty)
+          | [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
+          | select(.[0] != null)
+          | @tsv
         '
     )"
-    [[ -n "$mp4_url" ]] && break
+    if [[ -n "$_result" ]]; then
+      IFS=$'\t' read -r mp4_url episode_date <<< "$_result"
+      break
+    fi
   done
 fi
 
@@ -157,6 +165,7 @@ if [[ -z "$mp4_url" ]]; then
 fi
 
 echo "Spiele: $mp4_url" >&2
+echo "Vom: $episode_date" >&2
 
 # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
 ffplay -window_title "${WINDOW_TITLE}" -fs -loglevel quiet -nostats -hide_banner "$mp4_url" 2>/dev/null &
