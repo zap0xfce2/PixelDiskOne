@@ -75,7 +75,7 @@ pick_episode_before_date() {
 
   jq -r --arg date_limit "$date_limit" '
     def day(ts):
-      ts | tonumber | strftime("%Y%m%d");
+      ts | tonumber | strflocaltime("%Y%m%d");
 
     .result.results
     | map(select(.timestamp != null and (.timestamp|tonumber) > 0))
