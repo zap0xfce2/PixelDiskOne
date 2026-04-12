@@ -18,6 +18,7 @@ command -v feh     >/dev/null || { echo "feh nicht gefunden"     >&2; exit 1; }
 command -v xdotool >/dev/null || { echo "xdotool nicht gefunden" >&2; exit 1; }
 command -v curl    >/dev/null || { echo "curl nicht gefunden"    >&2; exit 1; }
 command -v jq      >/dev/null || { echo "jq nicht gefunden"      >&2; exit 1; }
+command -v ffmpeg  >/dev/null || { echo "ffmpeg nicht gefunden"  >&2; exit 1; }
 
 PLAYLIST_ID="$1"
 
@@ -121,13 +122,9 @@ while true; do
   fi
 
   # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
-  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" \
-    --cache=yes \
-    --demuxer-max-bytes=150MiB \
-    --demuxer-max-back-bytes=50MiB \
-    --cache-pause=yes \
-    --cache-pause-wait=3 \
-    "$video_url" --audio-file="$audio_url" 2>/dev/null &
+  ffmpeg -i "$video_url" -i "$audio_url" -map 0:v -map 1:a -c copy -f matroska - 2>/dev/null \
+    | mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" \
+        --demuxer-max-bytes=250MiB - 2>/dev/null &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
