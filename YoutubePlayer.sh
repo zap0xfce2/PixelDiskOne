@@ -121,7 +121,13 @@ while true; do
   fi
 
   # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
-  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
+  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" \
+    --cache=yes \
+    --demuxer-max-bytes=150MiB \
+    --demuxer-max-back-bytes=50MiB \
+    --cache-pause=yes \
+    --cache-pause-wait=3 \
+    "$video_url" --audio-file="$audio_url" 2>/dev/null &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
