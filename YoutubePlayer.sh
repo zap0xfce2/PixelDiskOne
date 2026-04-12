@@ -128,8 +128,8 @@ while true; do
   fi
 
   # ffmpeg merged Video+Audio zu einem Stream (verhindert Desync); startet während Splash läuft
-  ffmpeg -i "$video_url" -i "$audio_url" -map 0:v -map 1:a -c copy "${bsf_args[@]}" -f matroska - 2>/dev/null \
-    | mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" - 2>/dev/null &
+  ffmpeg -i "$video_url" -i "$audio_url" -map 0:v -map 1:a -c copy "${bsf_args[@]}" -f matroska - 2>/tmp/ffmpeg.log \
+    | mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" - 2>/tmp/mpv.log &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
