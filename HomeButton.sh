@@ -11,5 +11,5 @@ fi
 
 URL="${EMBY_HOST}/web/index.html#!/home"
 if pgrep -f 'Brave' >/dev/null; then
-  brave-browser --kiosk "$URL"
+  firefox --kiosk "$URL"
 fi
