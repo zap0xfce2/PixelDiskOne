@@ -18,7 +18,6 @@ command -v feh     >/dev/null || { echo "feh nicht gefunden"     >&2; exit 1; }
 command -v xdotool >/dev/null || { echo "xdotool nicht gefunden" >&2; exit 1; }
 command -v curl    >/dev/null || { echo "curl nicht gefunden"    >&2; exit 1; }
 command -v jq      >/dev/null || { echo "jq nicht gefunden"      >&2; exit 1; }
-command -v ffmpeg  >/dev/null || { echo "ffmpeg nicht gefunden"  >&2; exit 1; }
 
 PLAYLIST_ID="$1"
 
@@ -116,20 +115,13 @@ while true; do
   audio_url="$(printf '%s' "$api_response" \
     | jq -r '[.adaptiveFormats[] | select(.type | startswith("audio/"))] | sort_by(.bitrate | tonumber) | last | .url // empty')"
 
-  video_type="$(printf '%s' "$api_response" \
-    | jq -r '[.adaptiveFormats[] | select(.type | startswith("video/"))] | sort_by(.bitrate | tonumber) | last | .encoding // empty')"
-
-  bsf_args=()
-  [[ "$video_type" == "h264" ]] && bsf_args=(-bsf:v h264_mp4toannexb)
-
   if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
     echo "Keine Stream-URLs gefunden -> neu shufflen" >&2
     continue
   fi
 
-  # ffmpeg merged Video+Audio zu einem Stream (verhindert Desync); startet während Splash läuft
-  ffmpeg -i "$video_url" -i "$audio_url" -map 0:v -map 1:a -c copy "${bsf_args[@]}" -f matroska - 2>/tmp/ffmpeg.log \
-    | mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" - 2>/tmp/mpv.log &
+  # Video starten, während der Splash noch sichtbar ist; startet während Splash läuft
+  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
