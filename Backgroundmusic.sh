@@ -60,7 +60,7 @@ if [[ -e "$MUTE_FILE" ]]; then
 fi
 
 exec mpv \
-  --volume=70 \
+  --volume=75 \
   --no-video \
   --audio-client-name="$APP_NAME" \
   --title="$TITLE_NAME" \
