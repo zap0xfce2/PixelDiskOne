@@ -51,7 +51,7 @@ mpv --wid=$(xdotool search --onlyvisible --class xfdesktop) \
     --keep-open=always --no-stop-screensaver \
     --input-default-bindings=no \
     --input-vo-keyboard=no \
-    --volume=90 \
+    --volume=95 \
     --title="$APP_NAME" \
     --audio-client-name="$APP_NAME" \
     "$VIDEO_PATH"
