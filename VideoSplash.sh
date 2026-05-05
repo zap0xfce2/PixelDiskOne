@@ -46,6 +46,7 @@ if [[ -e "$MUTE_FILE" ]]; then
 fi
 
 mpv --wid=$(xdotool search --onlyvisible --class xfdesktop) \
+    --no-config  \
     --no-border --fullscreen --panscan=1 \
     --no-osd-bar --osd-level=0 --no-osc \
     --keep-open=always --no-stop-screensaver \
