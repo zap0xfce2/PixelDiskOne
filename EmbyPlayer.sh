@@ -12,7 +12,10 @@ if [[ -z "$EMBY_HOST" || -z "$API_KEY" ]]; then
   exit 1
 fi
 
-OPTIONS="-fs -loglevel quiet"
+#OPTIONS="-fs -loglevel quiet"
+# VOLUME="${3:-100}"
+VOLUME="100"
+WINDOW_TITLE="EmbyPlayer"
 MUTE_FILE="$HOME/.mute"
 
 # Hilfe-Text
@@ -278,4 +281,5 @@ trap '_emby_mark_watched' EXIT INT TERM QUIT
 # 5. Abspielen und Laufzeit messen
 touch "$MUTE_FILE"
 PLAY_START=$(date +%s)
-ffplay $OPTIONS "$STREAM_URL"
+#ffplay $OPTIONS "$STREAM_URL"
+mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$STREAM_URL" 2>/dev/null &
