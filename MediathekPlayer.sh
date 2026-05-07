@@ -20,13 +20,18 @@ MAX_RANDOM_RETRIES=10
 
 TOPIC_QUERY="$1"
 CHANNEL_QUERY="${2:-KiKA}"
-VOLUME="${3:-100}"
+VOLUME=100
+RANDOM_MODE=0
+
+for arg in "${@:3}"; do
+  case "$arg" in
+    --random) RANDOM_MODE=1 ;;
+    [0-9]*)   VOLUME="$arg" ;;
+    *) echo "Unbekanntes Argument: $arg" >&2; exit 1 ;;
+  esac
+done
 
 DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
-RANDOM_MODE=0
-if [[ "${4:-}" == "--random" ]]; then
-  RANDOM_MODE=1
-fi
 SPLASH_PNG="$DEFAULT_SPLASH_PNG"
 
 # Mute-File für Ducking
