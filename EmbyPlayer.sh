@@ -18,7 +18,7 @@ EPISODE_NUMBER=""         # Optionaler 1-basierter Index
 SEASONS=""                # Kommagetrennte Staffelnummern für -s
 UNSEEN=false              # Erste ungesehene/angefangene Episode abspielen
 DEBUG=false               # Debug-Ausgaben aktivieren
-VOLUME="${3:-100}"        # 100% Lautstärke
+VOLUME=100                # 100% Lautstärke
 WINDOW_TITLE="EmbyPlayer" # Fenstertitel
 MUTE_FILE="$HOME/.mute"   # Mutefile-Location
 
