@@ -17,7 +17,6 @@ fi
 VOLUME="100"
 WINDOW_TITLE="EmbyPlayer"
 MUTE_FILE="$HOME/.mute"
-touch "$MUTE_FILE"
 
 # Hilfe-Text
 show_help() {
@@ -280,7 +279,7 @@ _emby_mark_watched() {
 trap '_emby_mark_watched' EXIT INT TERM QUIT
 
 # 5. Abspielen und Laufzeit messen
-#touch "$MUTE_FILE"
+touch "$MUTE_FILE"
 PLAY_START=$(date +%s)
 #ffplay $OPTIONS "$STREAM_URL"
-mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$STREAM_URL" 2>/dev/null &
+mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$STREAM_URL" 2>/dev/null
