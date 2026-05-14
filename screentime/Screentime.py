@@ -375,6 +375,7 @@ def ensure_nag_visible(state: State) -> None:
     """
     if state.nag_proc is not None and state.nag_proc.poll() is None:
         return
+    subprocess.run(["pkill", "-f", "Nagscreen.py"], capture_output=True)
     if not NAG_SCREEN_SCRIPT.exists():
         print(f"Warnung: Nag-Screen-Skript nicht gefunden: {NAG_SCREEN_SCRIPT}")
         return
@@ -492,7 +493,7 @@ def handle_cooldown(config: Config, state: State) -> bool:
     elapsed = (now - state.cooldown_started_at).total_seconds()
 
     if elapsed >= config.cooldown_seconds:
-        close_nag(state)
+        state.nag_proc = None
         _reset_state(state)
         print(
             f"Cooldown beendet – Zustand zurückgesetzt. ({datetime.now().strftime('%H:%M:%S')})"
