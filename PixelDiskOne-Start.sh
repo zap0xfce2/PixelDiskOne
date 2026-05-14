@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# X-Display für alle screen-Sessions sicherstellen
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
 # für einen sauberen start alle screen sessions beenden
 screen -ls | grep Detached | cut -d. -f1 | awk '{print $1}' | xargs -n 1 screen -X -S quit
 

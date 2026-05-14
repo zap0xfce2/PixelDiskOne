@@ -1,5 +1,6 @@
 """Prüft ob das Screentime-Limit verbraucht ist und steuert den Nag-Screen."""
 
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -59,6 +60,7 @@ def show_nag(
     )
     if already_running:
         return
+    _env = {**os.environ, "DISPLAY": os.environ.get("DISPLAY", ":0")}
     subprocess.Popen(
         [
             sys.executable,
@@ -68,6 +70,7 @@ def show_nag(
             "--config-file",
             str(config_path),
         ],
+        env=_env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
