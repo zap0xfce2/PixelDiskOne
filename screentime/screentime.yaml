@@ -36,4 +36,5 @@ nag_screen:
   item_size: [10, 30]
   item_count: 8
   ready_sprite: sprites/ready.png
+  ready_sprite_offset_y: 0
   ready_sprite_size: [200, 200]

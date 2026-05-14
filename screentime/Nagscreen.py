@@ -77,6 +77,7 @@ class NagScreenConfig:
     item_offset_y: int = 0
     ready_sprite: Path | None = None
     ready_sprite_size: tuple[int, int] = field(default=READY_SPRITE_SIZE)
+    ready_sprite_offset_y: int = 0
 
 
 @dataclass
@@ -230,6 +231,7 @@ def parse_nag_screen_config(config_path: Path) -> NagScreenConfig:
         item_offset_y=int(nag.get("item_offset_y", 0)),
         ready_sprite=resolve("ready_sprite"),
         ready_sprite_size=resolve_size("ready_sprite_size", READY_SPRITE_SIZE),
+        ready_sprite_offset_y=int(nag.get("ready_sprite_offset_y", 0)),
     )
 
 
@@ -459,7 +461,7 @@ class NagScreen:
     def _draw_ready(self) -> int:
         """Erzeugt das Ready-Canvas-Element zentriert auf dem Bildschirm (initial versteckt)."""
         cx = self._width // 2
-        cy = self._height // 2
+        cy = self._height // 2 + self._nag_config.ready_sprite_offset_y
         if self._ready_anim:
             return self._canvas.create_image(
                 cx,
