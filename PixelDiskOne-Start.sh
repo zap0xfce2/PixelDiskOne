@@ -18,6 +18,9 @@ screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAn
 # Updater & NFC Reader starten
 screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./PixelDiskOne-Updater.sh && ./Main.py"
 
+# Screentime starten
+screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/screentime && ./screentime.py"
+
 # Warten so das die Diskette geladen werden kann
 # somit kommt das Intro nur wenn keine Diskette beim
 # booten eingesteckt ist
