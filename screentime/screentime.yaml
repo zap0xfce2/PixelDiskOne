@@ -1,14 +1,7 @@
-limit_minutes: 1
-cooldown_minutes: 1
+limit_minutes: 2
+cooldown_minutes: 3
 
-notification_icon: sprites/sanduhr.png
-# Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN
-notify_thresholds_remaining_percent:
-  - 30
-  - 10
-  - 5
-
-# Optional: Zeitfenster in denen das Limit täglich nicht gilt (lokale Uhrzeit)
+# Zeitfenster in denen das Limit täglich nicht gilt (lokale Uhrzeit)
 # unlimited:
 #   - from: "12:00"
 #     to: "13:00"
@@ -23,6 +16,13 @@ apps:
       - Backgroundmusic
   - name: retroarch
     limit_mode: hard
+
+notification_icon: sprites/sanduhr.png
+# Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN
+notify_thresholds_remaining_percent:
+  - 30
+  - 10
+  - 5
 
 nag_screen:
   character_sprite: sprites/mario.gif

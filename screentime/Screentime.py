@@ -424,17 +424,39 @@ def send_notification(
         icon: Themed icon name oder absoluter Pfad zur Icon-Datei.
     """
     subprocess.Popen(
-        [NOTIFY_SEND_CMD, "-u", urgency, "-i", icon, "Screentime", message],
+        [NOTIFY_SEND_CMD, "-u", urgency, "-i", icon, "Bildschirmzeit", message],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
 
+def _format_remaining_time(seconds: float) -> str:
+    """Formatiert Sekunden als lesbare deutsche Zeitangabe (z.B. '5 Minuten 30 Sekunden')."""
+    total = int(seconds)
+    hours = total // 3600
+    mins = (total % 3600) // 60
+    secs = total % 60
+    parts: list[str] = []
+    if hours > 0:
+        parts.append(f"{hours} {'Stunde' if hours == 1 else 'Stunden'}")
+        if mins > 0:
+            parts.append(f"{mins} {'Minute' if mins == 1 else 'Minuten'}")
+        return " ".join(parts)
+    if mins > 0:
+        parts.append(f"{mins} {'Minute' if mins == 1 else 'Minuten'}")
+        if secs > 0:
+            parts.append(f"{secs} {'Sekunde' if secs == 1 else 'Sekunden'}")
+        return " ".join(parts)
+    return f"{secs} {'Sekunde' if secs == 1 else 'Sekunden'}"
+
+
 def _build_notification_message(remaining_percent: float, limit_seconds: float) -> str:
     """Erstellt den Benachrichtigungstext mit verbleibender Zeit."""
     clamped = max(0.0, remaining_percent)
-    remaining_minutes = (clamped / 100.0) * limit_seconds / 60
-    return f"Noch {clamped:.0f}% verbleibend ({remaining_minutes:.1f} Minuten)"
+    remaining_seconds = (clamped / 100.0) * limit_seconds
+    return (
+        f"Noch {clamped:.0f}% verbleibend ({_format_remaining_time(remaining_seconds)})"
+    )
 
 
 def check_notifications(config: Config, state: State, remaining_percent: float) -> None:

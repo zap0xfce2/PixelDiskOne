@@ -385,7 +385,7 @@ class NagScreen:
             int(self._height * TEXT_Y_RATIO),
             text="",
             fill="white",
-            font=("Arial", 48, "bold"),
+            font=("Arial", 36, "bold"),
         )
         self._ready_id: int = self._draw_ready()
 
