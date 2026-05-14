@@ -43,12 +43,7 @@ start_splash() {
   if [[ -n "${SPLASH_PNG}" && -f "${SPLASH_PNG}" ]]; then
     feh --fullscreen --hide-pointer --auto-zoom "${SPLASH_PNG}" >/dev/null 2>&1 &
     splash_pid=$!
-    return 0
   fi
-
-  mpv --fs --no-input-default-bindings --title="${WINDOW_TITLE}-splash" \
-    "av://lavfi:color=c=black:s=1920x1080:r=1" --loop-file=inf 2>/dev/null &
-  splash_pid=$!
 }
 
 stop_splash() {
@@ -120,7 +115,7 @@ while true; do
     continue
   fi
 
-  # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
+  # Video starten, während der Splash noch sichtbar ist; startet während Splash läuft
   mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
   video_pid=$!
 

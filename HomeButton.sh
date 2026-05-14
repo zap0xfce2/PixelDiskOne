@@ -10,6 +10,6 @@ if [[ -f "$SCRIPT_DIR/.env" ]]; then
 fi
 
 URL="${EMBY_HOST}/web/index.html#!/home"
-if pgrep -f 'Brave' >/dev/null; then
-  brave-browser --kiosk "$URL"
+if pgrep -f 'firefox' >/dev/null; then
+  firefox --kiosk "$URL"
 fi

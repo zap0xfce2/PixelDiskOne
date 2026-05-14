@@ -78,3 +78,7 @@ Startet ein Video als Splashscreen indem es das Video auf den Desktophintergrund
 ### YoutubePlayer
 
 Spielt ein Video oder eine Playlist (zufällige Videoauswahl) von YouTube ab.
+
+### Extras/LoudNom
+
+Dient zum Normalisieren der Backgroundmusic MP3's, so das alle Musikstücke die gleiche Lautstärke haben. Wenn man das Script ohne Parameter aufruft wird eine Hilfe ausgegeben.

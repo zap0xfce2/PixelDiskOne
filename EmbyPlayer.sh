@@ -12,8 +12,15 @@ if [[ -z "$EMBY_HOST" || -z "$API_KEY" ]]; then
   exit 1
 fi
 
-OPTIONS="-fs -loglevel quiet"
-MUTE_FILE="$HOME/.mute"
+# Defaults
+MODE="episode"            # "episode" oder "season"
+EPISODE_NUMBER=""         # Optionaler 1-basierter Index
+SEASONS=""                # Kommagetrennte Staffelnummern für -s
+UNSEEN=false              # Erste ungesehene/angefangene Episode abspielen
+DEBUG=false               # Debug-Ausgaben aktivieren
+VOLUME=100                # 100% Lautstärke
+WINDOW_TITLE="EmbyPlayer" # Fenstertitel
+MUTE_FILE="$HOME/.mute"   # Mutefile-Location
 
 # Hilfe-Text
 show_help() {
@@ -25,6 +32,7 @@ Optionen:
   -e [Nummer]     Episode per 1-basiertem Index; ohne Nummer = zufällig
   --unseen        Erste ungesehene/angefangene Episode abspielen
   --debug         Debug-Ausgaben aktivieren (RANDOM_ID, Ticks, Zeitmessung, HTTP-Status)
+  -v <0-100>      Lautstärke (Standard: 100)
   -h, --help      Diese Hilfe anzeigen
 
 Beispiele:
@@ -49,6 +57,12 @@ Beispiele:
   ./EmbyPlayer.sh "Breaking Bad" -s 1,2 --unseen
       Erste ungesehene Episode aus Staffel 1 oder 2
       (bei keiner ungesehenen: zufällige Auswahl)
+
+  ./EmbyPlayer.sh "Breaking Bad" -v 50
+      Zufällige Episode mit halber Lautstärke
+
+  ./EmbyPlayer.sh "Breaking Bad" -s 2 -v 80
+      Zufällige Episode aus Staffel 2 mit 80% Lautstärke
 EOF
 }
 
@@ -65,13 +79,6 @@ if [[ -z "$SERIES_NAME" ]]; then
   echo "Nutzung: $0 <Serienname> [-s <Staffeln>] [-e [Episodennummer]] [--unseen]"
   exit 1
 fi
-
-# Defaults
-MODE="episode"    # "episode" oder "season"
-EPISODE_NUMBER="" # Optionaler 1-basierter Index
-SEASONS=""        # Kommagetrennte Staffelnummern für -s
-UNSEEN=false      # Erste ungesehene/angefangene Episode abspielen
-DEBUG=false       # Debug-Ausgaben aktivieren
 
 # Gibt Debug-Ausgabe auf stderr aus, wenn DEBUG=true
 dbg() { [[ "$DEBUG" == true ]] && echo "[DEBUG] $*" >&2; }
@@ -110,6 +117,10 @@ while [[ $# -gt 0 ]]; do
     --debug)
       DEBUG=true
       shift
+      ;;
+    -v)
+      VOLUME="$2"
+      shift 2
       ;;
     -h|--help)
       show_help
@@ -278,4 +289,4 @@ trap '_emby_mark_watched' EXIT INT TERM QUIT
 # 5. Abspielen und Laufzeit messen
 touch "$MUTE_FILE"
 PLAY_START=$(date +%s)
-ffplay $OPTIONS "$STREAM_URL"
+mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$STREAM_URL" 2>/dev/null

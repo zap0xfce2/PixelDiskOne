@@ -2,13 +2,13 @@
 # Startet die Neuste Folge der query sonst gestern, ...
 # Ignoriert die Version mit der Gebärdensprache
 # Zeigt vorher sofort einen Splashscreen, bis das Video startet.
-# Verwendung: MediathekPlayer.sh <QUERY> <KANAL> [--random]
+# Verwendung: MediathekPlayer.sh <QUERY> <KANAL> [LAUTSTÄRKE] [--random]
 
 set -euo pipefail
 
 : "${1:?QUERY fehlt}"
 
-command -v ffplay   >/dev/null || { echo "ffplay nicht gefunden"   >&2; exit 1; }
+command -v mpv      >/dev/null || { echo "mpv nicht gefunden"      >&2; exit 1; }
 command -v feh      >/dev/null || { echo "feh nicht gefunden"      >&2; exit 1; }
 command -v xdotool  >/dev/null || { echo "xdotool nicht gefunden"  >&2; exit 1; }
 command -v curl     >/dev/null || { echo "curl nicht gefunden"     >&2; exit 1; }
@@ -20,12 +20,18 @@ MAX_RANDOM_RETRIES=10
 
 TOPIC_QUERY="$1"
 CHANNEL_QUERY="${2:-KiKA}"
+VOLUME=100
+RANDOM_MODE=0
+
+for arg in "${@:3}"; do
+  case "$arg" in
+    --random) RANDOM_MODE=1 ;;
+    [0-9]*)   VOLUME="$arg" ;;
+    *) echo "Unbekanntes Argument: $arg" >&2; exit 1 ;;
+  esac
+done
 
 DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
-RANDOM_MODE=0
-if [[ "${3:-}" == "--random" ]]; then
-  RANDOM_MODE=1
-fi
 SPLASH_PNG="$DEFAULT_SPLASH_PNG"
 
 # Mute-File für Ducking
@@ -36,7 +42,6 @@ touch "$MUTE_FILE"
 WINDOW_TITLE="MediathekPlayer"
 
 splash_pid=""
-splash_mode=""  # "feh" | "ffplay"
 
 cleanup() {
   rm -f "$MUTE_FILE" 2>/dev/null || true
@@ -46,16 +51,9 @@ trap cleanup EXIT INT TERM QUIT
 
 start_splash() {
   if [[ -n "${SPLASH_PNG}" && -f "${SPLASH_PNG}" ]]; then
-    splash_mode="feh"
     feh --fullscreen --hide-pointer --auto-zoom "${SPLASH_PNG}" >/dev/null 2>&1 &
     splash_pid=$!
-    return 0
   fi
-
-  splash_mode="ffplay"
-  ffplay -window_title "${WINDOW_TITLE}-splash" -fs -loglevel quiet -nostats -hide_banner \
-    -f lavfi -i "color=c=black" >/dev/null 2>&1 &
-  splash_pid=$!
 }
 
 stop_splash() {
@@ -64,7 +62,6 @@ stop_splash() {
     wait "${splash_pid}" 2>/dev/null || true
   fi
   splash_pid=""
-  splash_mode=""
 }
 
 pick_episode_before_date() {
@@ -168,16 +165,25 @@ echo "Spiele: $mp4_url" >&2
 echo "Vom: $episode_date" >&2
 
 # Video starten, während der Splash noch sichtbar ist (weniger Flackern)
-ffplay -window_title "${WINDOW_TITLE}" -fs -loglevel quiet -nostats -hide_banner "$mp4_url" 2>/dev/null &
+mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$mp4_url" 2>/dev/null &
 video_pid=$!
 
 # Sobald das Video-Fenster existiert, Splash beenden
+window_found=false
 for _ in {1..50}; do
-  xdotool search --name "^${WINDOW_TITLE}$" >/dev/null 2>&1 && break
+  if xdotool search --name "^${WINDOW_TITLE}$" >/dev/null 2>&1; then
+    window_found=true
+    break
+  fi
   sleep 0.1
 done
 
 stop_splash
 
 wait "$video_pid" 2>/dev/null || true
+
+if [[ "${window_found}" == false ]]; then
+  echo "Video-Fenster erschien nicht – Stream-Fehler?" >&2
+  exit 1
+fi
 exit 0
