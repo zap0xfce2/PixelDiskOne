@@ -9,7 +9,7 @@ from pathlib import Path
 _SCREENTIME_DIR = Path(__file__).parent / "screentime"
 sys.path.insert(0, str(_SCREENTIME_DIR))
 
-from screentime import _is_unlimited, load_config, load_state  # noqa: E402
+from screentime import _is_unlimited, load_config, load_state  # type: ignore # noqa: E402
 
 _STATE_PATH = _SCREENTIME_DIR / "screentime-state.json"
 _CONFIG_PATH = _SCREENTIME_DIR / "screentime.yaml"
