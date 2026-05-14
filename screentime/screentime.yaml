@@ -1,5 +1,5 @@
-limit_minutes: 2
-cooldown_minutes: 3
+limit_minutes: 15
+cooldown_minutes: 15
 
 # Zeitfenster in denen das Limit täglich nicht gilt (lokale Uhrzeit)
 # unlimited:
