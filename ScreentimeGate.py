@@ -9,11 +9,11 @@ from pathlib import Path
 _SCREENTIME_DIR = Path(__file__).parent / "screentime"
 sys.path.insert(0, str(_SCREENTIME_DIR))
 
-from screentime import _is_unlimited, load_config, load_state  # type: ignore # noqa: E402
+from Screentime import _is_unlimited, load_config, load_state  # noqa: E402
 
 _STATE_PATH = _SCREENTIME_DIR / "screentime-state.json"
 _CONFIG_PATH = _SCREENTIME_DIR / "screentime.yaml"
-_NAG_SCRIPT = _SCREENTIME_DIR / "nag_screen.py"
+_NAG_SCRIPT = _SCREENTIME_DIR / "Nagscreen.py"
 
 
 def is_blocked(
@@ -53,7 +53,7 @@ def show_nag(
     """
     already_running = (
         subprocess.run(
-            ["pgrep", "-f", "nag_screen.py"],
+            ["pgrep", "-f", "Nagscreen.py"],
             capture_output=True,
         ).returncode
         == 0
@@ -78,4 +78,4 @@ def show_nag(
 
 def close_nag() -> None:
     """Beendet den Nag-Screen, falls er läuft."""
-    subprocess.run(["pkill", "-f", "nag_screen.py"], capture_output=True)
+    subprocess.run(["pkill", "-f", "Nagscreen.py"], capture_output=True)

@@ -1,5 +1,5 @@
 limit_minutes: 1
-cooldown_minutes: 10
+cooldown_minutes: 1
 
 notification_icon: sprites/sanduhr.png
 # Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN

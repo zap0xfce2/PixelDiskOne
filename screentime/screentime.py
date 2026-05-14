@@ -32,7 +32,7 @@ MAX_ELAPSED_FACTOR = 2  # Cap für elapsed-Zeit: max. 2× POLL_INTERVAL
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_PATH = SCRIPT_DIR / "screentime.yaml"
 STATE_PATH = SCRIPT_DIR / "screentime-state.json"
-NAG_SCREEN_SCRIPT = SCRIPT_DIR / "nag_screen.py"
+NAG_SCREEN_SCRIPT = SCRIPT_DIR / "Nagscreen.py"
 
 NOTIFY_SEND_CMD = "notify-send"
 PROC_DIR = Path("/proc")
