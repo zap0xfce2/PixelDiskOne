@@ -45,6 +45,7 @@ FALLBACK_ITEM_COLOR = "yellow"
 CHAR_SPRITE_SIZE: tuple[int, int] = (64, 64)
 GOAL_SPRITE_SIZE: tuple[int, int] = (90, 110)
 ITEM_SPRITE_SIZE: tuple[int, int] = (36, 36)
+READY_SPRITE_SIZE: tuple[int, int] = (200, 200)
 
 
 @dataclass
@@ -74,6 +75,8 @@ class NagScreenConfig:
     character_offset_y: int = 0
     goal_offset_y: int = 0
     item_offset_y: int = 0
+    ready_sprite: Path | None = None
+    ready_sprite_size: tuple[int, int] = field(default=READY_SPRITE_SIZE)
 
 
 @dataclass
@@ -225,6 +228,8 @@ def parse_nag_screen_config(config_path: Path) -> NagScreenConfig:
         character_offset_y=int(nag.get("character_offset_y", 0)),
         goal_offset_y=int(nag.get("goal_offset_y", 0)),
         item_offset_y=int(nag.get("item_offset_y", 0)),
+        ready_sprite=resolve("ready_sprite"),
+        ready_sprite_size=resolve_size("ready_sprite_size", READY_SPRITE_SIZE),
     )
 
 
@@ -335,7 +340,7 @@ class NagScreen:
         self._root.protocol(
             "WM_DELETE_WINDOW", lambda: None
         )  # Schließen per Button blockieren
-        self._root.bind("<Escape>", lambda _: self._root.destroy())
+        self._root.bind("<Escape>", self._on_escape)
         self._root.bind("<Alt-F4>", lambda e: "break")
         self._root.focus_force()
 
@@ -357,6 +362,10 @@ class NagScreen:
         )
         self._goal_anim = _load_frames(nag_config.goal_sprite, nag_config.goal_size)
         self._item_anim = _load_frames(nag_config.item_sprite, nag_config.item_size)
+        self._ready_anim = _load_frames(
+            nag_config.ready_sprite, nag_config.ready_sprite_size
+        )
+        self._is_ready: bool = False
 
         self._track_y = int(self._height * TRACK_Y_RATIO)
         self._char_y = self._track_y + nag_config.character_offset_y
@@ -376,12 +385,18 @@ class NagScreen:
             fill="white",
             font=("Arial", 48, "bold"),
         )
+        self._ready_id: int = self._draw_ready()
 
         signal.signal(signal.SIGTERM, lambda *_: self._root.destroy())
         self._update()
         if any(
             a and a.is_animated
-            for a in (self._char_anim, self._goal_anim, self._item_anim)
+            for a in (
+                self._char_anim,
+                self._goal_anim,
+                self._item_anim,
+                self._ready_anim,
+            )
         ):
             self._root.after(GIF_FRAME_INTERVAL_MS, self._tick_anims)
 
@@ -441,6 +456,42 @@ class NagScreen:
             outline="",
         )
 
+    def _draw_ready(self) -> int:
+        """Erzeugt das Ready-Canvas-Element zentriert auf dem Bildschirm (initial versteckt)."""
+        cx = self._width // 2
+        cy = self._height // 2
+        if self._ready_anim:
+            return self._canvas.create_image(
+                cx,
+                cy,
+                image=self._ready_anim.current,
+                anchor="center",
+                state="hidden",
+            )
+        return self._canvas.create_text(
+            cx,
+            cy,
+            text="✓",
+            fill="green",
+            font=("Arial", 200, "bold"),
+            state="hidden",
+        )
+
+    def _on_escape(self, _: tk.Event) -> None:
+        """Schließt das Fenster per ESC – nur wenn der Cooldown noch läuft."""
+        if not self._is_ready:
+            self._root.destroy()
+
+    def _show_ready(self) -> None:
+        """Blendet Charakter, Ziel und Items aus und zeigt das Ready-Symbol."""
+        self._is_ready = True
+        self._canvas.itemconfigure(self._char_id, state="hidden")
+        self._canvas.itemconfigure(self._goal_id, state="hidden")
+        for item_id in self._item_ids:
+            self._canvas.itemconfigure(item_id, state="hidden")
+        self._canvas.itemconfigure(self._text_id, state="hidden")
+        self._canvas.itemconfigure(self._ready_id, state="normal")
+
     def _tick_anims(self) -> None:
         """Cyclet animierte Sprite-Frames. Läuft als eigener after()-Timer."""
         try:
@@ -463,6 +514,10 @@ class NagScreen:
                 if self._canvas.itemcget(item_id, "state") != "hidden":
                     self._canvas.itemconfigure(item_id, image=self._item_anim.current)
 
+        if self._ready_anim and self._ready_anim.is_animated and self._is_ready:
+            self._ready_anim.advance()
+            self._canvas.itemconfigure(self._ready_id, image=self._ready_anim.current)
+
         self._root.after(GIF_FRAME_INTERVAL_MS, self._tick_anims)
 
     def _item_x(self, index: int) -> int:
@@ -476,8 +531,8 @@ class NagScreen:
             print(f"[nag_screen] update: remaining={remaining}", flush=True)
         if remaining is None or remaining <= 0:
             if self._debug:
-                print(f"[nag_screen] closing: remaining={remaining}", flush=True)
-            self._root.destroy()
+                print(f"[nag_screen] ready: remaining={remaining}", flush=True)
+            self._show_ready()
             return
 
         elapsed = self._cooldown_seconds - remaining
