@@ -7,6 +7,7 @@ import Console
 import Database
 import shlex
 import Notification
+import ScreentimeGate
 import signal
 import os
 import nfc  # type: ignore
@@ -98,6 +99,9 @@ def on_connect(tag):
     if _tag_present:
         return True
     _tag_present = True
+    if ScreentimeGate.is_blocked():
+        ScreentimeGate.show_nag()
+        return True
     start_process(tag)
     return True
 
@@ -106,6 +110,7 @@ def on_release(tag):
     global _tag_present
     _tag_present = False
     stop_process()
+    ScreentimeGate.close_nag()
     return True
 
 

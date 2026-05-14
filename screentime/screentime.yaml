@@ -1,0 +1,37 @@
+limit_minutes: 1
+cooldown_minutes: 1
+
+notification_icon: sprites/sanduhr.png
+# Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN
+notify_thresholds_remaining_percent:
+  - 30
+  - 10
+  - 5
+
+# Optional: Zeitfenster in denen das Limit täglich nicht gilt (lokale Uhrzeit)
+# unlimited:
+#   - from: "12:00"
+#     to: "13:00"
+#   - from: "18:00"
+#     to: "20:00"
+
+apps:
+  - name: mpv
+    limit_mode: soft
+    title_blacklist:
+      - PixelDiskOne-Splash
+      - Backgroundmusic
+  - name: retroarch
+    limit_mode: hard
+
+nag_screen:
+  character_sprite: sprites/mario.gif
+  character_offset_y: 20
+  character_size: [72, 72]
+  goal_sprite: sprites/castle.png
+  goal_offset_y: 0
+  goal_size: [110, 130]
+  item_sprite: sprites/coin.gif
+  item_offset_y: 30
+  item_size: [10, 30]
+  item_count: 8
