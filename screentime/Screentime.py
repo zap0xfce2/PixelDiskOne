@@ -32,7 +32,6 @@ MAX_ELAPSED_FACTOR = 2  # Cap für elapsed-Zeit: max. 2× POLL_INTERVAL
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_PATH = SCRIPT_DIR / "screentime.yaml"
 STATE_PATH = SCRIPT_DIR / "screentime-state.json"
-NAG_SCREEN_SCRIPT = SCRIPT_DIR / "Nagscreen.py"
 
 NOTIFY_SEND_CMD = "notify-send"
 PROC_DIR = Path("/proc")
@@ -124,7 +123,6 @@ class State:
         soft_allowed_pids: PIDs, die nach Limit-Erreichen (soft) noch laufen dürfen.
         notifications_sent: Schwellwerte, für die bereits eine Benachrichtigung gesendet wurde.
         last_poll_at: Zeitpunkt des letzten Poll-Durchlaufs (UTC).
-        nag_proc: Popen-Objekt des laufenden nag_screen.py-Prozesses (nur im Arbeitsspeicher, nicht persistiert).
     """
 
     used_seconds: float = 0.0
@@ -132,7 +130,6 @@ class State:
     soft_allowed_pids: list[int] = field(default_factory=list)
     notifications_sent: list[float] = field(default_factory=list)
     last_poll_at: datetime | None = None
-    nag_proc: subprocess.Popen | None = field(default=None, init=False, repr=False)
 
 
 # ---------------------------------------------------------------------------
@@ -363,51 +360,6 @@ def kill_pids(pids: set[int]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def ensure_nag_visible(state: State) -> None:
-    """Stellt sicher, dass der Nag-Screen sichtbar ist.
-
-    Startet nag_screen.py neu, falls der Prozess nicht mehr läuft.
-    poll() statt is_pid_alive() verwenden, damit Zombie-Prozesse (ESC-geschlossen)
-    korrekt erkannt und aufgeräumt werden — /proc/PID existiert für Zombies weiterhin.
-
-    Args:
-        state: Aktueller Daemon-Zustand (nag_proc wird ggf. aktualisiert).
-    """
-    if state.nag_proc is not None and state.nag_proc.poll() is None:
-        return
-    subprocess.run(["pkill", "-f", "Nagscreen.py"], capture_output=True)
-    if not NAG_SCREEN_SCRIPT.exists():
-        print(f"Warnung: Nag-Screen-Skript nicht gefunden: {NAG_SCREEN_SCRIPT}")
-        return
-    state.nag_proc = subprocess.Popen(
-        [
-            sys.executable,
-            str(NAG_SCREEN_SCRIPT),
-            "--state-file",
-            str(STATE_PATH),
-            "--config-file",
-            str(CONFIG_PATH),
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
-def close_nag(state: State) -> None:
-    """Beendet den Nag-Screen-Prozess per SIGTERM.
-
-    Args:
-        state: Aktueller Daemon-Zustand (nag_proc wird auf None gesetzt).
-    """
-    if state.nag_proc is None:
-        return
-    try:
-        os.kill(state.nag_proc.pid, signal.SIGTERM)
-    except (ProcessLookupError, PermissionError):
-        pass
-    state.nag_proc = None
-
-
 # ---------------------------------------------------------------------------
 # Benachrichtigungen
 # ---------------------------------------------------------------------------
@@ -483,10 +435,7 @@ def check_notifications(config: Config, state: State, remaining_percent: float) 
 
 
 def _reset_state(state: State) -> None:
-    """Setzt den Daemon-Zustand nach Cooldown-Ende zurück.
-
-    Setzt nag_proc nicht zurück — close_nag() muss zuvor aufgerufen worden sein.
-    """
+    """Setzt den Daemon-Zustand nach Cooldown-Ende zurück."""
     state.used_seconds = 0.0
     state.cooldown_started_at = None
     state.soft_allowed_pids = []
@@ -511,17 +460,28 @@ def _handle_waiting_for_soft_close(config: Config, state: State) -> None:
     still_alive = [pid for pid in state.soft_allowed_pids if is_pid_alive(pid)]
 
     if still_alive:
+        any_killed = False
         for app in config.apps:
             unwanted = find_app_pids(app) - set(state.soft_allowed_pids)
             if unwanted:
                 kill_pids(unwanted)
-                ensure_nag_visible(state)
+                any_killed = True
+        if any_killed:
+            send_notification(
+                "Bildschirmzeit abgelaufen – App-Start verhindert.",
+                "critical",
+                config.notification_icon,
+            )
         state.soft_allowed_pids = still_alive
         return
 
     state.soft_allowed_pids = []
     state.cooldown_started_at = datetime.now(timezone.utc)
-    ensure_nag_visible(state)
+    send_notification(
+        f"Cooldown gestartet – noch {_format_remaining_time(config.cooldown_seconds)} verbleibend.",
+        "normal",
+        config.notification_icon,
+    )
     print(
         f"Soft-Apps geschlossen – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
     )
@@ -548,7 +508,6 @@ def handle_cooldown(config: Config, state: State) -> bool:
     elapsed = (now - state.cooldown_started_at).total_seconds()
 
     if elapsed >= config.cooldown_seconds:
-        state.nag_proc = None
         _reset_state(state)
         print(
             f"Cooldown beendet – Zustand zurückgesetzt. ({datetime.now().strftime('%H:%M:%S')})"
@@ -556,11 +515,19 @@ def handle_cooldown(config: Config, state: State) -> bool:
         return True
 
     # Cooldown läuft: neu gestartete getrackte Prozesse sofort beenden
+    any_killed = False
     for app in config.apps:
         unwanted = find_app_pids(app) - set(state.soft_allowed_pids)
         if unwanted:
             kill_pids(unwanted)
-            ensure_nag_visible(state)
+            any_killed = True
+    if any_killed:
+        remaining = config.cooldown_seconds - elapsed
+        send_notification(
+            f"Cooldown läuft – noch {_format_remaining_time(remaining)} verbleibend.",
+            "critical",
+            config.notification_icon,
+        )
 
     return True
 
@@ -619,7 +586,11 @@ def handle_limit_action(
         else:
             state.cooldown_started_at = now
             if any_hard_app_killed:
-                ensure_nag_visible(state)
+                send_notification(
+                    f"Limit erreicht – Cooldown gestartet. Noch {_format_remaining_time(config.cooldown_seconds)} verbleibend.",
+                    "critical",
+                    config.notification_icon,
+                )
             print(
                 f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
             )
