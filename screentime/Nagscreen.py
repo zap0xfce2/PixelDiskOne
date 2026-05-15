@@ -377,9 +377,9 @@ class NagScreen:
         self._track_end_x = int(self._width * TRACK_END_X_RATIO)
 
         self._item_ids: list[int] = self._draw_items()
+        self._goal_id: int = self._draw_goal()
         self._char_id: int = self._draw_character(self._track_start_x)
         self._char_is_image = self._char_anim is not None
-        self._goal_id: int = self._draw_goal()  # Goal zuletzt → liegt über Character
         self._text_id = self._canvas.create_text(
             self._width // 2,
             int(self._height * TEXT_Y_RATIO),
