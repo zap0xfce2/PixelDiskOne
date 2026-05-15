@@ -399,7 +399,10 @@ def ensure_nag_visible(state: State) -> None:
 
 
 def send_notification(
-    message: str, urgency: str = "normal", icon: str = "appointment-soon"
+    message: str,
+    urgency: str = "normal",
+    icon: str = "appointment-soon",
+    timeout_ms: int = 5000,
 ) -> None:
     """Sendet eine Desktop-Benachrichtigung via notify-send.
 
@@ -407,9 +410,20 @@ def send_notification(
         message: Anzeigetext der Benachrichtigung.
         urgency: notify-send-Urgency ("low", "normal", "critical").
         icon: Themed icon name oder absoluter Pfad zur Icon-Datei.
+        timeout_ms: Anzeigedauer in Millisekunden; erzwingt Verschwinden auch bei critical-Urgency.
     """
     subprocess.Popen(
-        [NOTIFY_SEND_CMD, "-u", urgency, "-i", icon, "Bildschirmzeit", message],
+        [
+            NOTIFY_SEND_CMD,
+            "-u",
+            urgency,
+            "-t",
+            str(timeout_ms),
+            "-i",
+            icon,
+            "Bildschirmzeit",
+            message,
+        ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -456,7 +470,7 @@ def check_notifications(config: Config, state: State, remaining_percent: float) 
     for threshold in sorted_thresholds:
         if remaining_percent > threshold or threshold in state.notifications_sent:
             continue
-        urgency = "critical" if threshold == config.smallest_threshold else "normal"
+        urgency = "normal"
         message = _build_notification_message(remaining_percent, config.limit_seconds)
         send_notification(message, urgency, config.notification_icon)
         state.notifications_sent.append(threshold)
