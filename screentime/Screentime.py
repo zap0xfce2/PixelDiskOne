@@ -498,6 +498,35 @@ def _needs_fast_polling(state: State) -> bool:
     return bool(state.soft_allowed_pids) or state.cooldown_started_at is not None
 
 
+def _handle_waiting_for_soft_close(config: Config, state: State) -> None:
+    """Wartet auf Schließung aller Soft-Apps, dann startet den Cooldown.
+
+    Wird aufgerufen wenn das Limit erreicht wurde aber noch Soft-App-PIDs
+    laufen. Neue Startversuche werden sofort beendet.
+
+    Args:
+        config: Daemon-Konfiguration.
+        state: Aktueller Daemon-Zustand.
+    """
+    still_alive = [pid for pid in state.soft_allowed_pids if is_pid_alive(pid)]
+
+    if still_alive:
+        for app in config.apps:
+            unwanted = find_app_pids(app) - set(state.soft_allowed_pids)
+            if unwanted:
+                kill_pids(unwanted)
+                ensure_nag_visible(state)
+        state.soft_allowed_pids = still_alive
+        return
+
+    state.soft_allowed_pids = []
+    state.cooldown_started_at = datetime.now(timezone.utc)
+    ensure_nag_visible(state)
+    print(
+        f"Soft-Apps geschlossen – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
+    )
+
+
 def handle_cooldown(config: Config, state: State) -> bool:
     """Verarbeitet die Cooldown-Phase.
 
@@ -508,6 +537,10 @@ def handle_cooldown(config: Config, state: State) -> bool:
     Returns:
         True wenn gerade Cooldown aktiv ist (Loop-Iteration soll enden).
     """
+    if state.cooldown_started_at is None and state.soft_allowed_pids:
+        _handle_waiting_for_soft_close(config, state)
+        return True
+
     if state.cooldown_started_at is None:
         return False
 
@@ -578,12 +611,18 @@ def handle_limit_action(
             _handle_soft_app_at_limit(pids, state)
 
     if state.cooldown_started_at is None:
-        state.cooldown_started_at = now
-        if any_hard_app_killed:
-            ensure_nag_visible(state)
-        print(
-            f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
-        )
+        if state.soft_allowed_pids:
+            # Soft-Apps laufen noch – Cooldown beginnt erst nach ihrer Schließung
+            print(
+                f"Limit erreicht – Warte auf Schließung der Soft-Apps. ({datetime.now().strftime('%H:%M:%S')})"
+            )
+        else:
+            state.cooldown_started_at = now
+            if any_hard_app_killed:
+                ensure_nag_visible(state)
+            print(
+                f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
+            )
 
 
 def _is_unlimited(config: Config, now: datetime) -> bool:
