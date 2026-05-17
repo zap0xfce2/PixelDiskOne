@@ -3,6 +3,8 @@
 # X-Display für alle screen-Sessions sicherstellen
 export DISPLAY="${DISPLAY:-:0}"
 export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+# Venv-Python für alle nachfolgenden Prozesse priorisieren
+export PATH="$HOME/PixelDiskOne/.venv/bin:$PATH"
 
 # für einen sauberen start alle screen sessions beenden
 screen -ls | grep -oP '\d+\.\S+' | xargs -I{} screen -S {} -X quit
@@ -19,11 +21,8 @@ rm -f "$HOME/.mute" 2>/dev/null || true
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
 
-# Updater blockierend ausführen – läuft mit System-Python (Venv evtl. noch nicht vorhanden)
+# Updater blockierend ausführen
 (cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
-
-# Venv-Python für alle nachfolgenden Prozesse priorisieren
-export PATH="$HOME/PixelDiskOne/.venv/bin:$PATH"
 
 # Erst danach Main.py in einer eigenen Screen-Session starten
 screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
