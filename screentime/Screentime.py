@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+
+import os
+import sys
+
+_venv_python = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", ".venv", "bin", "python3"
+)
+if os.path.exists(_venv_python) and sys.executable != _venv_python:
+    os.execv(_venv_python, [_venv_python] + sys.argv)
+
 """Screentime-Daemon für Linux/XFCE.
 
 Trackt die Laufzeit konfigurierter Anwendungen und erzwingt Limits

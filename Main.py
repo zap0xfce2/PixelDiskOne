@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 # Erstellt von Zap0xfce2 im Februar 2025
 
+import os
+import sys
+
+_venv_python = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), ".venv", "bin", "python3"
+)
+if os.path.exists(_venv_python) and sys.executable != _venv_python:
+    os.execv(_venv_python, [_venv_python] + sys.argv)
+
 import subprocess
 import re
 import Console
