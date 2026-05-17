@@ -32,7 +32,7 @@ nag_screen:
   goal_offset_y: 0
   goal_size: [110, 130]
   item_sprite: sprites/coin.gif
-  item_offset_y: 30
+  item_offset_y: 40
   item_size: [20, 20]
   item_count: 8
   ready_sprite: sprites/ready.gif
