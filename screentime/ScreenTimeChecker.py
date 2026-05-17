@@ -1,4 +1,4 @@
-"""Prüft ob das Screentime-Limit verbraucht ist und steuert den Nag-Screen."""
+"""Prüft ob das Screentime-Limit verbraucht ist und steuert den NagScreen."""
 
 import os
 import subprocess
@@ -6,14 +6,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-_SCREENTIME_DIR = Path(__file__).parent / "screentime"
+_SCREENTIME_DIR = Path(__file__).parent
 sys.path.insert(0, str(_SCREENTIME_DIR))
 
-from Screentime import _is_unlimited, load_config, load_state  # noqa: E402
+from ScreenTimeTracker import _is_unlimited, load_config, load_state  # noqa: E402
 
 _STATE_PATH = _SCREENTIME_DIR / "screentime-state.json"
 _CONFIG_PATH = _SCREENTIME_DIR / "screentime.yaml"
-_NAG_SCRIPT = _SCREENTIME_DIR / "Nagscreen.py"
+_NAG_SCRIPT = _SCREENTIME_DIR / "NagScreen.py"
 
 
 def is_blocked(
@@ -44,16 +44,16 @@ def show_nag(
     state_path: Path = _STATE_PATH,
     config_path: Path = _CONFIG_PATH,
 ) -> None:
-    """Startet den Nag-Screen, falls er nicht bereits läuft.
+    """Startet den NagScreen, falls er nicht bereits läuft.
 
     Args:
-        nag_script: Pfad zu nag_screen.py.
+        nag_script: Pfad zu NagScreen.py.
         state_path: Pfad zur screentime-state.json.
         config_path: Pfad zur screentime.yaml.
     """
     already_running = (
         subprocess.run(
-            ["pgrep", "-f", "Nagscreen.py"],
+            ["pgrep", "-f", "NagScreen.py"],
             capture_output=True,
         ).returncode
         == 0
@@ -77,5 +77,5 @@ def show_nag(
 
 
 def close_nag() -> None:
-    """Beendet den Nag-Screen, falls er läuft."""
-    subprocess.run(["pkill", "-f", "Nagscreen.py"], capture_output=True)
+    """Beendet den NagScreen, falls er läuft."""
+    subprocess.run(["pkill", "-f", "NagScreen.py"], capture_output=True)
