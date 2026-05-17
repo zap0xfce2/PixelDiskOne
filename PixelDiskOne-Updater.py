@@ -7,6 +7,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import time
 import types
 import Notification
 
@@ -26,7 +27,8 @@ if os.path.exists(_venv_python) and os.path.realpath(
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 GITHUB_HOST = "github.com"
 GITHUB_PORT = 443
-CONNECTIVITY_TIMEOUT = 5  # Sekunden
+CONNECTIVITY_TIMEOUT = 5  # Sekunden – Socket-Timeout pro Versuch
+INTERNET_WAIT_TIMEOUT = 30  # Sekunden – wie lange beim Boot auf Netzwerk gewartet wird
 GIT_TIMEOUT = 30  # Sekunden
 PIP_TIMEOUT = 30  # Sekunden (uv ist 10–100× schneller als pip)
 NOTIFY_ICON = os.path.join(REPO_DIR, "floppy-disk.png")
@@ -41,6 +43,15 @@ def has_internet() -> bool:
             return True
     except OSError:
         return False
+
+
+def wait_for_internet() -> bool:
+    """Wartet bis zu INTERNET_WAIT_TIMEOUT Sekunden auf eine Internetverbindung."""
+    for _ in range(INTERNET_WAIT_TIMEOUT):
+        if has_internet():
+            return True
+        time.sleep(1)
+    return False
 
 
 def fetch_remote() -> bool:
@@ -116,10 +127,10 @@ def main() -> None:
 
     Console.info("PixelDiskOne Updater – prüfe Verbindung...")
 
-    if not has_internet():
+    if not wait_for_internet():
         Notification.send(
             "Update übersprungen",
-            "Keine Internetverbindung – PixelDiskOne startet ohne Update.",
+            "Keine Internetverbindung – starte ohne Update.",
             NOTIFY_ICON,
         )
         Console.warning("Keine Internetverbindung – Update übersprungen.")
@@ -139,7 +150,7 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         Notification.send(
             "Update-Timeout",
-            "GitHub nicht erreichbar – PixelDiskOne startet ohne Update.",
+            "GitHub nicht erreichbar – starte ohne Update.",
             NOTIFY_ICON,
         )
         Console.error("git fetch Timeout.")
@@ -154,7 +165,7 @@ def main() -> None:
     if not apply_update():
         Notification.send(
             "Update fehlgeschlagen",
-            "Git-Fehler – PixelDiskOne startet mit letztem Stand.",
+            "Git-Fehler – starte mit letztem Stand.",
             NOTIFY_ICON,
         )
         Console.error("apply_update fehlgeschlagen.")
@@ -182,7 +193,7 @@ def main() -> None:
 
     Notification.send(
         "Update erfolgreich",
-        "PixelDiskOne wurde aktualisiert und startet jetzt.",
+        "PixelDiskOne wurde aktualisiert.",
         NOTIFY_ICON,
     )
     Console.info("Update abgeschlossen.")
