@@ -39,6 +39,16 @@ NAG_SCREEN_SCRIPT = SCRIPT_DIR / "Nagscreen.py"
 NOTIFY_SEND_CMD = "notify-send"
 PROC_DIR = Path("/proc")
 
+_DAY_NAME_TO_WEEKDAY: dict[str, int] = {
+    "mo": 0,
+    "di": 1,
+    "mi": 2,
+    "do": 3,
+    "fr": 4,
+    "sa": 5,
+    "so": 6,
+}
+
 
 class LimitMode(str, Enum):
     """Verhalten beim Erreichen des Zeitlimits."""
@@ -74,10 +84,12 @@ class UnlimitedWindow:
     Attributes:
         start: Beginn des Fensters (inklusive, lokale Uhrzeit).
         end: Ende des Fensters (exklusive, lokale Uhrzeit).
+        days: Wochentage als Integer (0=Mo … 6=So). None = gilt täglich.
     """
 
     start: dtime
     end: dtime
+    days: list[int] | None = None
 
 
 @dataclass
@@ -174,6 +186,11 @@ def load_config(path: Path) -> Config:
         UnlimitedWindow(
             start=dtime.fromisoformat(w["from"]),
             end=dtime.fromisoformat(w["to"]),
+            days=(
+                [_DAY_NAME_TO_WEEKDAY[d.lower()] for d in w["days"]]
+                if "days" in w
+                else None
+            ),
         )
         for w in raw.get("unlimited", [])
     ]
@@ -650,8 +667,13 @@ def _is_unlimited(config: Config, now: datetime) -> bool:
     Returns:
         True wenn das Limit gerade deaktiviert ist.
     """
-    current = now.astimezone().time().replace(tzinfo=None)
-    return any(w.start <= current < w.end for w in config.unlimited_windows)
+    local = now.astimezone()
+    current = local.time().replace(tzinfo=None)
+    weekday = local.weekday()
+    return any(
+        w.start <= current < w.end and (w.days is None or weekday in w.days)
+        for w in config.unlimited_windows
+    )
 
 
 def poll(config: Config, state: State) -> State:

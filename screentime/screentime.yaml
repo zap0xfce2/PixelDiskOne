@@ -1,12 +1,20 @@
 limit_minutes: 15
 cooldown_minutes: 15
 
-# Zeitfenster in denen das Limit täglich nicht gilt (lokale Uhrzeit)
+# Zeitfenster in denen das Limit nicht gilt
+# Optionales "days"-Feld schränkt auf bestimmte Wochentage ein (mo di mi do fr sa so).
+# Ohne "days" gilt das Fenster täglich.
 # unlimited:
 #   - from: "12:00"
 #     to: "13:00"
-#   - from: "18:00"
-#     to: "20:00"
+#     days: [mo, di, mi, do, fr] # nur Mo–Fr
+#   - from: "00:00"
+#     to: "23:59"
+#     days: [sa, so] # ganzer Sa und So
+unlimited:
+  - from: "08:00"
+    to: "11:00"
+    days: [sa, so]
 
 apps:
   - name: mpv
