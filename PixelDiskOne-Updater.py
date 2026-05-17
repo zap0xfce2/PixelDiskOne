@@ -10,27 +10,20 @@ import sys
 import time
 import types
 import Notification
+import VenvBootstrap  # type: ignore # noqa: F401
 
 try:
     import Console
 except ImportError:
     Console = types.SimpleNamespace(info=print, warning=print, error=print)
 
-_venv_python = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), ".venv", "bin", "python3"
-)
-if os.path.exists(_venv_python) and os.path.realpath(
-    sys.executable
-) != os.path.realpath(_venv_python):
-    os.execv(_venv_python, [_venv_python] + sys.argv)
-
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 GITHUB_HOST = "github.com"
 GITHUB_PORT = 443
 CONNECTIVITY_TIMEOUT = 5  # Sekunden – Socket-Timeout pro Versuch
-INTERNET_WAIT_TIMEOUT = 10  # Sekunden – wie lange beim Boot auf Netzwerk gewartet wird
-GIT_TIMEOUT = 10  # Sekunden
-PIP_TIMEOUT = 15  # Sekunden
+INTERNET_WAIT_TIMEOUT = 30  # Sekunden – wie lange beim Boot auf Netzwerk gewartet wird
+GIT_TIMEOUT = 30  # Sekunden
+PIP_TIMEOUT = 30  # Sekunden (uv ist 10–100× schneller als pip)
 NOTIFY_ICON = os.path.join(REPO_DIR, "floppy-disk.png")  # Update erfolgreich
 NOTIFY_ICON_NETWORK = "network-offline"  # keine Internetverbindung
 NOTIFY_ICON_TIMEOUT = "network-error"  # Netzwerk-Timeout

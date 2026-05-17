@@ -8,7 +8,11 @@ Startet via: python nag_screen.py --state-file PATH --config-file PATH
 
 from __future__ import annotations
 
-import _venv_bootstrap  # type: ignore # noqa: F401
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import VenvBootstrap  # type: ignore # noqa: F401, E402
 
 import argparse
 import json
