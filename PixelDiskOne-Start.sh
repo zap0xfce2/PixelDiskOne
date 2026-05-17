@@ -16,12 +16,11 @@ screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
 # evtl. vorhandene Mutefile entfernen
 rm -f "$HOME/.mute" 2>/dev/null || true
 
-# Updater blockierend ausführen und somit auf Abschluss warten
-(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.sh)
-
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
 
+# Updater blockierend ausführen (max. ~65 s bei Timeout)
+python3 "$HOME/PixelDiskOne/PixelDiskOne-Updater.py"
 
 # Erst danach Main.py in einer eigenen Screen-Session starten
 screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
