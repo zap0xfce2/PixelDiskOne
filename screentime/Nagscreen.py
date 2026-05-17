@@ -8,24 +8,32 @@ Startet via: python nag_screen.py --state-file PATH --config-file PATH
 
 from __future__ import annotations
 
+import _venv_bootstrap  # type: ignore # noqa: F401
+
 import argparse
 import json
 import signal
 import sys
-import yaml
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+import yaml
+
+if TYPE_CHECKING:
+    import tkinter as tk
+    from PIL import Image, ImageSequence, ImageTk  # type: ignore
 
 try:
-    import tkinter as tk
+    import tkinter as tk  # type: ignore[no-redef]
 
     _TKINTER_AVAILABLE = True
 except ModuleNotFoundError:
     _TKINTER_AVAILABLE = False
 
 try:
-    from PIL import Image, ImageSequence, ImageTk  # type: ignore[import]
+    from PIL import Image, ImageSequence, ImageTk  # type: ignore[no-redef]
 
     _PIL_AVAILABLE = True
 except ImportError:
