@@ -28,7 +28,7 @@ screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAn
 screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
 
 # Screentime starten
-screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/screentime && ./Screentime.py"
+screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/ScreenTime && ./ScreenTimeTracker.py"
 
 # Warten so das die Diskette geladen werden kann
 # somit kommt das Intro nur wenn keine Diskette beim
