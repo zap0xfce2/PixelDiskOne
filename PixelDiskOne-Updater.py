@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """PixelDiskOne Updater – prüft Konnektivität, aktualisiert Code und Abhängigkeiten."""
 
+import argparse
 import os
 import shutil
 import socket
@@ -97,6 +98,14 @@ def run_pip_install() -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Update erzwingen, auch ohne Remote-Änderungen",
+    )
+    args = parser.parse_args()
+
     Console.info("PixelDiskOne Updater – prüfe Verbindung...")
 
     if not has_internet():
@@ -128,7 +137,7 @@ def main() -> None:
         Console.error("git fetch Timeout.")
         sys.exit(0)
 
-    if not has_remote_changes():
+    if not args.force and not has_remote_changes():
         Console.info("Kein Update nötig – starte mit aktuellem Stand.")
         sys.exit(0)
 
