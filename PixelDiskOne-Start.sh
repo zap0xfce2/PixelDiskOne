@@ -18,13 +18,13 @@ screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
 # evtl. vorhandene Mutefile entfernen
 rm -f "$HOME/.mute" 2>/dev/null || true
 
-# BGM & Splash Muter starten
-screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
-
 # Updater blockierend ausführen
 (cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
 
-# Erst danach Main.py in einer eigenen Screen-Session starten
+# BGM & Splash Muter starten
+screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
+
+# NFC Reader starten
 screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
 
 # Screentime starten
