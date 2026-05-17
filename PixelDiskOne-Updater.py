@@ -28,10 +28,14 @@ REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 GITHUB_HOST = "github.com"
 GITHUB_PORT = 443
 CONNECTIVITY_TIMEOUT = 5  # Sekunden – Socket-Timeout pro Versuch
-INTERNET_WAIT_TIMEOUT = 30  # Sekunden – wie lange beim Boot auf Netzwerk gewartet wird
-GIT_TIMEOUT = 30  # Sekunden
-PIP_TIMEOUT = 30  # Sekunden (uv ist 10–100× schneller als pip)
-NOTIFY_ICON = os.path.join(REPO_DIR, "floppy-disk.png")
+INTERNET_WAIT_TIMEOUT = 10  # Sekunden – wie lange beim Boot auf Netzwerk gewartet wird
+GIT_TIMEOUT = 10  # Sekunden
+PIP_TIMEOUT = 15  # Sekunden
+NOTIFY_ICON = os.path.join(REPO_DIR, "floppy-disk.png")  # Update erfolgreich
+NOTIFY_ICON_NETWORK = "network-offline"  # keine Internetverbindung
+NOTIFY_ICON_TIMEOUT = "network-error"  # Netzwerk-Timeout
+NOTIFY_ICON_ERROR = "dialog-error"  # Git- / pip-Fehler
+NOTIFY_ICON_WARNING = "dialog-warning"  # pip-Timeout / Warnungen
 VENV_DIR = os.path.join(REPO_DIR, ".venv")
 VENV_PYTHON = os.path.join(VENV_DIR, "bin", "python")
 
@@ -131,7 +135,7 @@ def main() -> None:
         Notification.send(
             "Update übersprungen",
             "Keine Internetverbindung – starte ohne Update.",
-            NOTIFY_ICON,
+            NOTIFY_ICON_NETWORK,
         )
         Console.warning("Keine Internetverbindung – Update übersprungen.")
         sys.exit(0)
@@ -143,7 +147,7 @@ def main() -> None:
             Notification.send(
                 "Update-Fehler",
                 "git fetch fehlgeschlagen – starte mit aktuellem Stand.",
-                NOTIFY_ICON,
+                NOTIFY_ICON_ERROR,
             )
             Console.error("git fetch fehlgeschlagen.")
             sys.exit(0)
@@ -151,7 +155,7 @@ def main() -> None:
         Notification.send(
             "Update-Timeout",
             "GitHub nicht erreichbar – starte ohne Update.",
-            NOTIFY_ICON,
+            NOTIFY_ICON_TIMEOUT,
         )
         Console.error("git fetch Timeout.")
         sys.exit(0)
@@ -166,7 +170,7 @@ def main() -> None:
         Notification.send(
             "Update fehlgeschlagen",
             "Git-Fehler – starte mit letztem Stand.",
-            NOTIFY_ICON,
+            NOTIFY_ICON_ERROR,
         )
         Console.error("apply_update fehlgeschlagen.")
         sys.exit(0)
@@ -177,7 +181,7 @@ def main() -> None:
         Notification.send(
             "pip install Timeout",
             "Abhängigkeiten konnten nicht aktualisiert werden.",
-            NOTIFY_ICON,
+            NOTIFY_ICON_WARNING,
         )
         Console.error("pip install Timeout.")
         sys.exit(0)
@@ -186,7 +190,7 @@ def main() -> None:
         Notification.send(
             "pip install fehlgeschlagen",
             "Bitte manuell prüfen: pip install -r requirements.txt",
-            NOTIFY_ICON,
+            NOTIFY_ICON_ERROR,
         )
         Console.error("pip install fehlgeschlagen.")
         sys.exit(0)
