@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Erstellt von Zap0xfce2 im Februar 2025
 
 import subprocess

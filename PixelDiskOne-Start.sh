@@ -19,14 +19,17 @@ rm -f "$HOME/.mute" 2>/dev/null || true
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
 
-# Updater blockierend ausführen (max. ~95 s bei Timeout)
-python3 "$HOME/PixelDiskOne/PixelDiskOne-Updater.py"
+# Updater blockierend ausführen – läuft mit System-Python (Venv evtl. noch nicht vorhanden)
+(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
+
+# Venv-Python für alle nachfolgenden Prozesse priorisieren
+export PATH="$HOME/PixelDiskOne/.venv/bin:$PATH"
 
 # Erst danach Main.py in einer eigenen Screen-Session starten
-screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && .venv/bin/python Main.py"
+screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
 
 # Screentime starten
-screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/screentime && ../.venv/bin/python Screentime.py"
+screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/screentime && ./Screentime.py"
 
 # Warten so das die Diskette geladen werden kann
 # somit kommt das Intro nur wenn keine Diskette beim
