@@ -19,8 +19,10 @@ GITHUB_HOST = "github.com"
 GITHUB_PORT = 443
 CONNECTIVITY_TIMEOUT = 5  # Sekunden
 GIT_TIMEOUT = 30  # Sekunden
-PIP_TIMEOUT = 30  # Sekunden
+PIP_TIMEOUT = 30  # Sekunden (uv ist 10–100× schneller als pip)
 NOTIFY_ICON = os.path.join(REPO_DIR, "floppy-disk.png")
+VENV_DIR = os.path.join(REPO_DIR, ".venv")
+VENV_PYTHON = os.path.join(VENV_DIR, "bin", "python")
 
 
 def has_internet() -> bool:
@@ -71,16 +73,23 @@ def apply_update() -> bool:
 
 
 def run_pip_install() -> bool:
-    """Stellt sicher dass uv installiert ist, nutzt es dann für requirements.txt."""
+    """Erstellt Venv falls nötig und installiert requirements.txt via uv."""
     req_file = os.path.join(REPO_DIR, "requirements.txt")
     if not os.path.exists(req_file):
         return True
     if not shutil.which("uv"):
         subprocess.run(
-            ["pip", "install", "uv"], timeout=30, capture_output=True, check=True
+            ["pip", "install", "--user", "uv"],
+            timeout=30,
+            capture_output=True,
+            check=True,
+        )
+    if not os.path.exists(VENV_PYTHON):
+        subprocess.run(
+            ["uv", "venv", VENV_DIR], timeout=30, capture_output=True, check=True
         )
     result = subprocess.run(
-        ["uv", "pip", "install", "-r", req_file],
+        ["uv", "pip", "install", "--python", VENV_PYTHON, "-r", req_file],
         timeout=PIP_TIMEOUT,
         capture_output=True,
     )
