@@ -40,6 +40,7 @@ sleep 7
 screen -S VideoSplash -dm bash -c "cd $HOME/PixelDiskOne && ./VideoSplash.sh"
 
 # Warten bis zum Musikstart
+echo "Warte auf Musikstart ..."
 sleep 22
 
 # Hintergrundmusik spielen
