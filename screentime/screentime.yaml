@@ -26,7 +26,7 @@ notify_thresholds_remaining_percent:
 
 nag_screen:
   character_sprite: sprites/mario.gif
-  character_offset_y: 20
+  character_offset_y: 50
   character_size: [72, 72]
   goal_sprite: sprites/castle.png
   goal_offset_y: 0
