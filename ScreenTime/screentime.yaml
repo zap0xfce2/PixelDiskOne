@@ -12,9 +12,12 @@ cooldown_minutes: 15
 #     to: "23:59"
 #     days: [sa, so] # ganzer Sa und So
 unlimited:
+  - from: "20:00"
+    to: "00:00"
+    days: [mo, di, mi, do, fr] # Wochentags
   - from: "08:00"
     to: "11:00"
-    days: [sa, so]
+    days: [sa, so] # Wochenende
 
 apps:
   - name: mpv
