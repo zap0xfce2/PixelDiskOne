@@ -26,14 +26,14 @@ notify_thresholds_remaining_percent:
 
 nag_screen:
   character_sprite: sprites/mario.gif
-  character_offset_y: 50
+  character_offset_y: 30
   character_size: [72, 72]
   goal_sprite: sprites/castle.png
   goal_offset_y: 0
   goal_size: [110, 130]
   item_sprite: sprites/coin.gif
   item_offset_y: 30
-  item_size: [30, 30]
+  item_size: [20, 20]
   item_count: 8
   ready_sprite: sprites/ready.gif
   ready_sprite_offset_y: 0
