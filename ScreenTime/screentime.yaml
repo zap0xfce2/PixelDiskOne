@@ -1,5 +1,5 @@
-limit_minutes: 1
-cooldown_minutes: 1
+limit_minutes: 15
+cooldown_minutes: 15
 
 # Zeitfenster in denen das Limit nicht gilt
 # Optionales "days"-Feld schränkt auf bestimmte Wochentage ein (mo di mi do fr sa so).
