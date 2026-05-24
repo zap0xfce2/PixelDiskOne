@@ -28,13 +28,10 @@ FALLBACK_TIMEOUT_ACTIVE=0.3  # Trigger aktiv, moderates Polling für Trigger-End
 # Helfer
 # =========================
 
-# prüft, ob einer der Trigger-Prozesse läuft (Zombie-Prozesse werden ignoriert)
+# prüft, ob einer der Trigger-Prozesse läuft
 any_trigger_proc() {
   for p in "${TARGET_PROCS[@]}"; do
-    while IFS= read -r pid; do
-      state=$(awk '/^State:/{print $2; exit}' /proc/"$pid"/status 2>/dev/null) || true
-      [[ -n "$state" && "$state" != "Z" ]] && return 0
-    done < <(pgrep -x "$p" 2>/dev/null)
+    pgrep -x "$p" > /dev/null 2>&1 && return 0
   done
   return 1
 }
