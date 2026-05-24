@@ -16,7 +16,6 @@ import os
 import signal
 import subprocess
 import sys
-import threading
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -36,7 +35,7 @@ FAST_POLL_INTERVAL = (
     0.5  # Verkürzt wenn Soft-Limit aktiv (schnelles Erkennen von Neustarts)
 )
 MAX_ELAPSED_FACTOR = 2  # Cap für elapsed-Zeit: max. 2× POLL_INTERVAL
-_SIGKILL_TIMEOUT_SECS = 3.0  # Wartezeit nach SIGTERM bevor SIGKILL nachgeschickt wird
+_SIGKILL_TIMEOUT_SECS = 0.5  # Wartezeit nach SIGTERM bevor SIGKILL nachgeschickt wird
 _SIGKILL_POLL_INTERVAL = 0.1  # Polling-Interval beim Warten auf Prozessende
 MUTE_FILE = Path.home() / ".mute"
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -703,6 +702,11 @@ def handle_limit_action(
         else:
             _handle_soft_app_at_limit(pids, state)
 
+    # Synchroner SIGKILL-Fallback vor NagScreen: Prozess muss tot sein damit
+    # MuteMusicAndSplash.sh das Ducking aufhebt und Musik im NagScreen spielt.
+    if any_hard_app_killed:
+        _sigkill_survivors(frozenset(all_hard_pids))
+
     if state.cooldown_started_at is None:
         if state.soft_allowed_pids:
             # Soft-Apps laufen noch – Cooldown beginnt erst nach ihrer Schließung
@@ -721,11 +725,6 @@ def handle_limit_action(
             print(
                 f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
             )
-
-    if any_hard_app_killed:
-        threading.Thread(
-            target=_sigkill_survivors, args=(frozenset(all_hard_pids),), daemon=True
-        ).start()
 
 
 def _is_unlimited(config: Config, now: datetime) -> bool:
