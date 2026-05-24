@@ -35,6 +35,8 @@ FAST_POLL_INTERVAL = (
     0.5  # Verkürzt wenn Soft-Limit aktiv (schnelles Erkennen von Neustarts)
 )
 MAX_ELAPSED_FACTOR = 2  # Cap für elapsed-Zeit: max. 2× POLL_INTERVAL
+_SIGKILL_TIMEOUT_SECS = 3.0  # Wartezeit nach SIGTERM bevor SIGKILL nachgeschickt wird
+_SIGKILL_POLL_INTERVAL = 0.1  # Polling-Interval beim Warten auf Prozessende
 MUTE_FILE = Path.home() / ".mute"
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_PATH = SCRIPT_DIR / "screentime.yaml"
@@ -383,6 +385,26 @@ def kill_pids(pids: set[int]) -> None:
             print(f"Keine Berechtigung: PID {pid} konnte nicht beendet werden.")
 
 
+def _wait_for_pids_dead(pids: set[int], timeout_secs: float) -> set[int]:
+    """Wartet bis alle PIDs gestorben sind oder der Timeout abläuft.
+
+    Args:
+        pids: Zu überwachende PIDs.
+        timeout_secs: Maximale Wartezeit in Sekunden.
+
+    Returns:
+        Menge der PIDs, die nach Ablauf des Timeouts noch leben.
+    """
+    deadline = time.monotonic() + timeout_secs
+    remaining = set(pids)
+    while time.monotonic() < deadline:
+        remaining = {pid for pid in remaining if is_pid_alive(pid)}
+        if not remaining:
+            break
+        time.sleep(_SIGKILL_POLL_INTERVAL)
+    return remaining
+
+
 # ---------------------------------------------------------------------------
 # Nag-Screen
 # ---------------------------------------------------------------------------
@@ -611,7 +633,7 @@ def _calculate_elapsed(state: State) -> float:
 
 
 def _handle_hard_app_at_limit(app_pids: set[int]) -> None:
-    """Terminiert alle PIDs einer Hard-App."""
+    """Sendet SIGTERM an alle PIDs einer Hard-App und löscht das Mute-File."""
     if not app_pids:
         return
     if MUTE_FILE.exists():
@@ -620,6 +642,20 @@ def _handle_hard_app_at_limit(app_pids: set[int]) -> None:
         except OSError:
             pass
     kill_pids(app_pids)
+
+
+def _sigkill_survivors(pids: set[int]) -> None:
+    """Wartet auf Prozessende und schickt SIGKILL an PIDs die SIGTERM ignorieren."""
+    surviving = _wait_for_pids_dead(pids, _SIGKILL_TIMEOUT_SECS)
+    for pid in surviving:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except PermissionError:
+            print(
+                f"Keine Berechtigung: PID {pid} konnte nicht mit SIGKILL beendet werden."
+            )
 
 
 def _handle_soft_app_at_limit(app_pids: set[int], state: State) -> None:
@@ -641,12 +677,14 @@ def handle_limit_action(
     """
     now = datetime.now(timezone.utc)
     any_hard_app_killed = False
+    all_hard_pids: set[int] = set()
 
     for app in config.apps:
         pids = app_pids.get(app.name, set())
         if app.limit_mode == LimitMode.HARD:
             if pids:
                 any_hard_app_killed = True
+                all_hard_pids |= pids
             _handle_hard_app_at_limit(pids)
         else:
             _handle_soft_app_at_limit(pids, state)
@@ -669,6 +707,9 @@ def handle_limit_action(
             print(
                 f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
             )
+
+    if any_hard_app_killed:
+        _sigkill_survivors(all_hard_pids)
 
 
 def _is_unlimited(config: Config, now: datetime) -> bool:
