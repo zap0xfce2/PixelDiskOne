@@ -16,6 +16,7 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -357,15 +358,28 @@ def find_app_pids(app: AppConfig) -> set[int]:
 
 
 def is_pid_alive(pid: int) -> bool:
-    """Prüft ob eine PID noch im /proc-Verzeichnis existiert.
+    """Prüft ob eine PID noch als laufender Prozess existiert.
+
+    Zombie-Prozesse (State: Z) zählen als tot – sie haben bereits geendet
+    und warten nur noch auf das wait() des Parent-Prozesses.
 
     Args:
         pid: Zu prüfende Prozess-ID.
 
     Returns:
-        True wenn der Prozess noch läuft.
+        True wenn der Prozess existiert und kein Zombie ist.
     """
-    return (PROC_DIR / str(pid)).exists()
+    proc_dir = PROC_DIR / str(pid)
+    if not proc_dir.exists():
+        return False
+    try:
+        status = (proc_dir / "status").read_text()
+    except OSError:
+        return False
+    for line in status.splitlines():
+        if line.startswith("State:"):
+            return "Z" not in line
+    return True
 
 
 def kill_pids(pids: set[int]) -> None:
@@ -709,7 +723,9 @@ def handle_limit_action(
             )
 
     if any_hard_app_killed:
-        _sigkill_survivors(all_hard_pids)
+        threading.Thread(
+            target=_sigkill_survivors, args=(frozenset(all_hard_pids),), daemon=True
+        ).start()
 
 
 def _is_unlimited(config: Config, now: datetime) -> bool:
