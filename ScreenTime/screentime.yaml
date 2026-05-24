@@ -27,6 +27,8 @@ apps:
       - Backgroundmusic
   - name: retroarch
     limit_mode: hard
+  - name: firefox
+    limit_mode: hard
 
 # Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN
 notify_thresholds_remaining_percent:
