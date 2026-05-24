@@ -15,8 +15,8 @@ unlimited:
   - from: "20:00"
     to: "00:00"
     days: [mo, di, mi, do, fr] # Wochentags
-  - from: "08:00"
-    to: "11:00"
+  - from: "08:30"
+    to: "10:00"
     days: [sa, so] # Wochenende
 
 apps:
@@ -28,12 +28,13 @@ apps:
   - name: retroarch
     limit_mode: hard
 
-notification_icon: sprites/sanduhr.png
 # Benachrichtigung wenn X% der Limit-Zeit VERBLEIBEN
 notify_thresholds_remaining_percent:
   - 30
   - 10
   - 5
+
+notification_icon: sprites/sanduhr.png
 
 nag_screen:
   character_sprite: sprites/mario.gif
