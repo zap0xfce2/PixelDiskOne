@@ -35,6 +35,7 @@ FAST_POLL_INTERVAL = (
     0.5  # Verkürzt wenn Soft-Limit aktiv (schnelles Erkennen von Neustarts)
 )
 MAX_ELAPSED_FACTOR = 2  # Cap für elapsed-Zeit: max. 2× POLL_INTERVAL
+MUTE_FILE = Path.home() / ".mute"
 SCRIPT_DIR = Path(__file__).parent.resolve()
 CONFIG_PATH = SCRIPT_DIR / "screentime.yaml"
 STATE_PATH = SCRIPT_DIR / "screentime-state.json"
@@ -148,6 +149,7 @@ class State:
     used_seconds: float = 0.0
     cooldown_started_at: datetime | None = None
     soft_allowed_pids: list[int] = field(default_factory=list)
+    cooldown_notified_pids: list[int] = field(default_factory=list)
     notifications_sent: list[float] = field(default_factory=list)
     last_poll_at: datetime | None = None
     nag_proc: subprocess.Popen | None = field(default=None, init=False, repr=False)
@@ -509,6 +511,7 @@ def _reset_state(state: State) -> None:
     state.used_seconds = 0.0
     state.cooldown_started_at = None
     state.soft_allowed_pids = []
+    state.cooldown_notified_pids = []
     state.notifications_sent = []
 
 
@@ -584,19 +587,22 @@ def handle_cooldown(config: Config, state: State) -> bool:
         )
         return True
 
-    # Cooldown läuft: getrackte Prozesse per Notification melden (kein Kill)
-    any_new = False
+    # Cooldown läuft: neu gestartete Apps einmalig per Notification melden (kein Kill)
+    new_pids: set[int] = set()
     for app in config.apps:
-        if find_app_pids(app) - set(state.soft_allowed_pids):
-            any_new = True
-            break
-    if any_new:
+        new_pids |= (
+            find_app_pids(app)
+            - set(state.soft_allowed_pids)
+            - set(state.cooldown_notified_pids)
+        )
+    if new_pids:
         remaining = config.cooldown_seconds - elapsed
         send_notification(
             f"Cooldown läuft – noch {_format_remaining_time(remaining)} verbleibend.",
             "critical",
             config.notification_icon,
         )
+        state.cooldown_notified_pids.extend(new_pids)
 
     return True
 
@@ -614,6 +620,11 @@ def _handle_hard_app_at_limit(app_pids: set[int]) -> None:
     """Terminiert alle PIDs einer Hard-App."""
     if not app_pids:
         return
+    if MUTE_FILE.exists():
+        try:
+            MUTE_FILE.unlink()
+        except OSError:
+            pass
     kill_pids(app_pids)
 
 
