@@ -667,6 +667,11 @@ def handle_limit_action(
             state.cooldown_started_at = now
             if any_hard_app_killed:
                 ensure_nag_visible(state)
+            send_notification(
+                f"Cooldown gestartet – noch {_format_remaining_time(config.cooldown_seconds)} verbleibend.",
+                "normal",
+                config.notification_icon,
+            )
             print(
                 f"Limit erreicht – Cooldown gestartet. ({datetime.now().strftime('%H:%M:%S')})"
             )
