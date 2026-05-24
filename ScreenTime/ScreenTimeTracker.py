@@ -596,12 +596,6 @@ def handle_cooldown(config: Config, state: State) -> bool:
             - set(state.cooldown_notified_pids)
         )
     if new_pids:
-        remaining = config.cooldown_seconds - elapsed
-        send_notification(
-            f"Cooldown läuft – noch {_format_remaining_time(remaining)} verbleibend.",
-            "normal",
-            config.notification_icon,
-        )
         state.cooldown_notified_pids.extend(new_pids)
 
     return True
