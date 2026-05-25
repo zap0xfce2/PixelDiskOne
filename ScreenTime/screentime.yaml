@@ -1,4 +1,4 @@
-limit_minutes: 15
+limit_minutes: 20
 cooldown_minutes: 5
 
 # Zeitfenster in denen das Limit nicht gilt
