@@ -5,3 +5,11 @@ Poc's
 DB.dump
 .vscode
 Backup
+tests
+CLAUDE.md
+Plan.md
+.claude
+.serena
+.pytest_cache
+screentime/screentime-state.json
+.venv/

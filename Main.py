@@ -1,5 +1,12 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Erstellt von Zap0xfce2 im Februar 2025
+
+import os
+import sys
+from pathlib import Path
+import VenvBootstrap  # type: ignore # noqa: F401
+
+sys.path.insert(0, str(Path(__file__).parent / "ScreenTime"))
 
 import subprocess
 import re
@@ -7,8 +14,8 @@ import Console
 import Database
 import shlex
 import Notification
+import ScreenTimeChecker  # type: ignore
 import signal
-import os
 import nfc  # type: ignore
 import time
 
@@ -98,6 +105,9 @@ def on_connect(tag):
     if _tag_present:
         return True
     _tag_present = True
+    if ScreenTimeChecker.is_blocked():
+        ScreenTimeChecker.show_nag()
+        return True
     start_process(tag)
     return True
 
@@ -106,6 +116,7 @@ def on_release(tag):
     global _tag_present
     _tag_present = False
     stop_process()
+    ScreenTimeChecker.close_nag()
     return True
 
 
