@@ -32,10 +32,10 @@ def is_blocked(
     config = load_config(config_path)
     state = load_state(state_path)
 
-    if state.cooldown_started_at is not None:
-        return True
     if _is_unlimited(config, datetime.now(timezone.utc)):
         return False
+    if state.cooldown_started_at is not None:
+        return True
     return state.used_seconds >= config.limit_seconds
 
 
