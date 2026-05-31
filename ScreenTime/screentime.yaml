@@ -13,7 +13,7 @@ cooldown_minutes: 10
 #     days: [sa, so] # ganzer Sa und So
 unlimited:
   - from: "20:00"
-    to: "00:00"
+    to: "23:59"
     days: [mo, di, mi, do, fr] # Wochentags
   - from: "08:30"
     to: "10:00"
