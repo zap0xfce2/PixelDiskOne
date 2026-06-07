@@ -37,6 +37,6 @@ if [[ -z "$P2_IDX" ]]; then
 fi
 
 exec retroarch \
-    --input-player1-joypad-index="$P1_IDX" \
-    --input-player2-joypad-index="$P2_IDX" \
+    -d "1:$P1_IDX" \
+    -d "2:$P2_IDX" \
     "$@"
