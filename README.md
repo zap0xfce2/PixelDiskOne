@@ -4,7 +4,7 @@ Die PixelDiskOne ist eine Spielekonsole welche als Medium 3,5" Disketten nutzt. 
 
 Auf dem Gerät läuft Ubuntu 22.04.5 LTS es wird ein ACR122U als NFC-Reader verwendet. Der NFC-Reader wurde wie unter https://www.jamesridgway.co.uk/install-acr122u-drivers-on-linux-mint-and-kubuntu beschrieben eingerichtet.
 
-Um die Zeit für Kinder zu begrenzen wurde Timekpr-nExT installiert. Eine Anleitung findet sich unter: https://mjasnik.gitlab.io/timekpr-next/#installation
+Um die Zeit für Kinder zu begrenzen wurde eine eigene Lösung names `ScreenTime` integriert. Die Konfigurationsdatei hierfür findet sich in `ScreenTime/screentime.yaml`.
 
 ## Neues Spiel hinzufügen
 
