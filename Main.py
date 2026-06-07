@@ -20,8 +20,29 @@ import nfc  # type: ignore
 import time
 
 BACKEND = "usb:072f:2200"
+NFC_VENDOR_ID = 0x072F
+NFC_PRODUCT_ID = 0x2200
+_USB_RE_ENUM_WAIT_SECS = 1.5
+
 _current_proc = None
 _tag_present = False
+
+
+def reset_nfc_device() -> None:
+    """USB-Reset des ACR122U, damit kein veralteter Gerätezustand nach Neustart bleibt."""
+    try:
+        import usb.core  # type: ignore
+
+        dev = usb.core.find(idVendor=NFC_VENDOR_ID, idProduct=NFC_PRODUCT_ID)
+        if dev is None:
+            Console.info("NFC-Reader nicht gefunden, kein Reset nötig.")
+            return
+        Console.info("Führe USB-Reset des NFC-Readers durch …")
+        dev.reset()
+        time.sleep(_USB_RE_ENUM_WAIT_SECS)
+        Console.info("NFC-Reader erfolgreich zurückgesetzt.")
+    except Exception as e:
+        Console.info(f"USB-Reset nicht möglich (wird ignoriert): {e}")
 
 
 def start_process(tag):
@@ -120,23 +141,37 @@ def on_release(tag):
     return True
 
 
+_RECONNECT_WAIT_SECS = 3.0
+
 Console.info("PixelDiskOne gestartet, warte auf Disketten!")
-with nfc.ContactlessFrontend(BACKEND) as clf:
-    while True:
-        try:
-            clf.connect(
-                rdwr={
-                    "on-connect": on_connect,
-                    "on-release": on_release,
-                    "beep-on-connect": False,
-                }
-            )
-            time.sleep(0.05)
-        except KeyboardInterrupt:
-            stop_process()
-            break
-        except Exception as e:
-            Console.error(f"Fehler: {e}")
-            Notification.send("Fehler", f"{e}", "dialog-error")
-            stop_process()
-            time.sleep(0.2)
+reset_nfc_device()
+while True:
+    try:
+        with nfc.ContactlessFrontend(BACKEND) as clf:
+            while True:
+                try:
+                    clf.connect(
+                        rdwr={
+                            "on-connect": on_connect,
+                            "on-release": on_release,
+                            "beep-on-connect": False,
+                        }
+                    )
+                    time.sleep(0.05)
+                except KeyboardInterrupt:
+                    stop_process()
+                    raise
+                except Exception as e:
+                    Console.error(f"Polling-Fehler: {e}")
+                    Notification.send("Fehler", f"{e}", "dialog-error")
+                    stop_process()
+                    time.sleep(0.2)
+    except KeyboardInterrupt:
+        break
+    except Exception as e:
+        Console.error(
+            f"Reader-Initialisierung fehlgeschlagen: {e} — Neuversuch in {_RECONNECT_WAIT_SECS}s"
+        )
+        stop_process()
+        time.sleep(_RECONNECT_WAIT_SECS)
+        reset_nfc_device()
