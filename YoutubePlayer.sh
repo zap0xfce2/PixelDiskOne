@@ -33,7 +33,7 @@ VOLUME="${2:-100}"
 
 INVIDIOUS_BASE_URL="${INVIDIOUS_BASE_URL:-https://inv.nadeko.net}"
 YOUTUBE_BASE_URL="https://www.youtube.com"
-YT_DLP_PLAYER_CLIENT="android"   # max. 720p, aber kein PO-Token nötig
+YT_DLP_PLAYER_CLIENT="${YT_DLP_PLAYER_CLIENT:-android}"   # max. 720p, kein PO-Token nötig; leer = yt-dlp Standard-Clients
 CURL_TIMEOUT_SECONDS=10
 WINDOW_TITLE="YoutubePlayer"
 
@@ -132,17 +132,25 @@ while true; do
   audio_url="$(printf '%s' "$api_response" \
     | jq -r '[.adaptiveFormats[] | select(.type | startswith("audio/"))] | sort_by(.bitrate | tonumber) | last | .url // empty')"
 
-  mpv_common_args=(--fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}")
+  # Fallback: Stream direkt via yt-dlp von YouTube auflösen
+  if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
+    echo "Kein Invidious-Stream verfügbar -> Fallback auf YouTube" >&2
+    ytdl_args=(-g -f "bestvideo+bestaudio")
+    if [[ -n "${YT_DLP_PLAYER_CLIENT}" ]]; then
+      ytdl_args+=(--extractor-args "youtube:player_client=${YT_DLP_PLAYER_CLIENT}")
+    fi
+    mapfile -t stream_urls < <(yt-dlp "${ytdl_args[@]}" "${YOUTUBE_BASE_URL}/watch?v=${video_id}" 2>/dev/null)
+    video_url="${stream_urls[0]:-}"
+    audio_url="${stream_urls[1]:-}"
+  fi
+
+  if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
+    echo "Kein Stream verfügbar (Invidious & YouTube) -> neu shufflen" >&2
+    continue
+  fi
 
   # Video starten, während der Splash noch sichtbar ist; startet während Splash läuft
-  if [[ -n "${video_url}" && -n "${audio_url}" ]]; then
-    mpv "${mpv_common_args[@]}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
-  else
-    echo "Kein Invidious-Stream verfügbar -> Fallback auf YouTube" >&2
-    mpv "${mpv_common_args[@]}" \
-      --ytdl-raw-options="extractor-args=youtube:player_client=${YT_DLP_PLAYER_CLIENT}" \
-      "${YOUTUBE_BASE_URL}/watch?v=${video_id}" 2>/dev/null &
-  fi
+  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
