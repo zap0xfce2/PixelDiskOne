@@ -33,7 +33,7 @@ VOLUME="${2:-100}"
 
 INVIDIOUS_BASE_URL="${INVIDIOUS_BASE_URL:-https://inv.nadeko.net}"
 YOUTUBE_BASE_URL="https://www.youtube.com"
-YT_DLP_PLAYER_CLIENT="${YT_DLP_PLAYER_CLIENT:-android}"   # max. 720p, kein PO-Token nötig; leer = yt-dlp Standard-Clients
+YT_DLP_PLAYER_CLIENT="${YT_DLP_PLAYER_CLIENT:-}"   # leer = yt-dlp Standard-Clients; optional z.B. "android" für geringere Auflösung
 CURL_TIMEOUT_SECONDS=10
 WINDOW_TITLE="YoutubePlayer"
 
@@ -135,7 +135,7 @@ while true; do
   # Fallback: Stream direkt via yt-dlp von YouTube auflösen
   if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
     echo "Kein Invidious-Stream verfügbar -> Fallback auf YouTube" >&2
-    ytdl_args=(-g -f "bestvideo+bestaudio")
+    ytdl_args=(-g -f "bestvideo+bestaudio/best")
     if [[ -n "${YT_DLP_PLAYER_CLIENT}" ]]; then
       ytdl_args+=(--extractor-args "youtube:player_client=${YT_DLP_PLAYER_CLIENT}")
     fi
@@ -144,13 +144,19 @@ while true; do
     audio_url="${stream_urls[1]:-}"
   fi
 
-  if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
+  if [[ -z "${video_url}" ]]; then
     echo "Kein Stream verfügbar (Invidious & YouTube) -> neu shufflen" >&2
     continue
   fi
 
+  mpv_common_args=(--fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}")
+
   # Video starten, während der Splash noch sichtbar ist; startet während Splash läuft
-  mpv --fs --no-osc --osd-level=0 --keep-open=yes --volume="${VOLUME}" --title="${WINDOW_TITLE}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
+  if [[ -n "${audio_url}" ]]; then
+    mpv "${mpv_common_args[@]}" "$video_url" --audio-file="$audio_url" 2>/dev/null &
+  else
+    mpv "${mpv_common_args[@]}" "$video_url" 2>/dev/null &
+  fi
   video_pid=$!
 
   # Sobald das Video-Fenster existiert, Splash beenden
