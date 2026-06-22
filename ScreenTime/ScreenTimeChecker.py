@@ -9,7 +9,12 @@ from pathlib import Path
 _SCREENTIME_DIR = Path(__file__).parent
 sys.path.insert(0, str(_SCREENTIME_DIR))
 
-from ScreenTimeTracker import _is_unlimited, load_config, load_state  # noqa: E402
+from ScreenTimeTracker import (  # noqa: E402
+    _is_cooldown_active,
+    _is_unlimited,
+    load_config,
+    load_state,
+)
 
 _STATE_PATH = _SCREENTIME_DIR / "screentime-state.json"
 _CONFIG_PATH = _SCREENTIME_DIR / "screentime.yaml"
@@ -31,11 +36,15 @@ def is_blocked(
     """
     config = load_config(config_path)
     state = load_state(state_path)
+    now = datetime.now(timezone.utc)
 
-    if _is_unlimited(config, datetime.now(timezone.utc)):
+    if _is_unlimited(config, now):
         return False
     if state.cooldown_started_at is not None:
-        return True
+        # Ein gesetzter Cooldown ersetzt die used_seconds-Prüfung: Ist er
+        # abgelaufen, entspricht das einem _reset_state() im Daemon – auch
+        # wenn der Daemon diesen Reset noch nicht selbst nachvollzogen hat.
+        return _is_cooldown_active(config, state, now)
     return state.used_seconds >= config.limit_seconds
 
 

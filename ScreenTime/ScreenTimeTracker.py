@@ -594,6 +594,24 @@ def _handle_waiting_for_soft_close(config: Config, state: State) -> None:
     )
 
 
+def _is_cooldown_active(config: Config, state: State, now: datetime) -> bool:
+    """Gibt True zurück wenn ein gespeicherter Cooldown noch nicht abgelaufen ist.
+
+    Args:
+        config: Daemon-Konfiguration.
+        state: Aktueller Daemon-Zustand.
+        now: Aktueller Zeitpunkt (UTC-aware).
+
+    Returns:
+        True wenn `cooldown_started_at` gesetzt ist und die Cooldown-Dauer
+        noch nicht verstrichen ist.
+    """
+    if state.cooldown_started_at is None:
+        return False
+    elapsed = (now - state.cooldown_started_at).total_seconds()
+    return elapsed < config.cooldown_seconds
+
+
 def handle_cooldown(config: Config, state: State) -> bool:
     """Verarbeitet die Cooldown-Phase.
 
@@ -612,9 +630,8 @@ def handle_cooldown(config: Config, state: State) -> bool:
         return False
 
     now = datetime.now(timezone.utc)
-    elapsed = (now - state.cooldown_started_at).total_seconds()
 
-    if elapsed >= config.cooldown_seconds:
+    if not _is_cooldown_active(config, state, now):
         state.nag_proc = None
         _reset_state(state)
         print(
