@@ -18,6 +18,8 @@ command -v feh     >/dev/null || { echo "feh nicht gefunden"     >&2; exit 1; }
 command -v xdotool >/dev/null || { echo "xdotool nicht gefunden" >&2; exit 1; }
 command -v curl    >/dev/null || { echo "curl nicht gefunden"    >&2; exit 1; }
 command -v jq      >/dev/null || { echo "jq nicht gefunden"      >&2; exit 1; }
+command -v yt-dlp  >/dev/null || { echo "yt-dlp nicht gefunden"  >&2; exit 1; }
+command -v deno    >/dev/null || { echo "deno nicht gefunden"    >&2; exit 1; }
 
 PLAYLIST_ID="$1"
 
@@ -82,6 +84,17 @@ load_playlist_from_invidious() {
   mapfile -t URLS < <(printf '%s\n' "${URLS[@]}" | awk '!seen[$0]++')
 }
 
+# Fallback wenn Invidious keine Stream-URLs liefert (z.B. HTTP 403 bei adaptiveFormats).
+# Setzt video_url/audio_url, oder lässt sie leer wenn yt-dlp ebenfalls scheitert.
+resolve_stream_via_ytdlp() {
+  local id="$1"
+  local output
+  output="$(yt-dlp -f "bestvideo+bestaudio" -g --remote-components ejs:github "https://www.youtube.com/watch?v=${id}" 2>/dev/null)"
+
+  video_url="$(printf '%s' "$output" | sed -n '1p')"
+  audio_url="$(printf '%s' "$output" | sed -n '2p')"
+}
+
 # Splash sofort starten (instant Feedback)
 start_splash
 
@@ -109,6 +122,11 @@ while true; do
 
   audio_url="$(printf '%s' "$api_response" \
     | jq -r '[.adaptiveFormats[] | select(.type | startswith("audio/"))] | sort_by(.bitrate | tonumber) | last | .url // empty')"
+
+  if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
+    echo "Invidious liefert keine Stream-URLs -> Fallback auf yt-dlp" >&2
+    resolve_stream_via_ytdlp "$video_id"
+  fi
 
   if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
     echo "Keine Stream-URLs gefunden -> neu shufflen" >&2
