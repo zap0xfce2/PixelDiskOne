@@ -81,7 +81,16 @@ load_playlist_from_invidious() {
   done
 
   # Duplikate entfernen (Reihenfolge beibehalten)
-  mapfile -t URLS < <(printf '%s\n' "${URLS[@]}" | awk '!seen[$0]++')
+  if (( ${#URLS[@]} > 0 )); then
+    mapfile -t URLS < <(printf '%s\n' "${URLS[@]}" | awk '!seen[$0]++')
+  fi
+}
+
+# Fallback wenn Invidious keine Playlist-Videos liefert (z.B. leeres .videos-Array).
+load_playlist_from_ytdlp() {
+  while IFS= read -r id; do
+    URLS+=("https://www.youtube.com/watch?v=${id}")
+  done < <(yt-dlp --flat-playlist --print "%(id)s" "https://www.youtube.com/playlist?list=${PLAYLIST_ID}" 2>/dev/null)
 }
 
 # Fallback wenn Invidious keine Stream-URLs liefert (z.B. HTTP 403 bei adaptiveFormats).
@@ -101,6 +110,11 @@ start_splash
 # Playlist einmal einlesen
 URLS=()
 load_playlist_from_invidious
+
+if (( ${#URLS[@]} == 0 )); then
+  echo "Invidious liefert keine Playlist-Videos -> Fallback auf yt-dlp" >&2
+  load_playlist_from_ytdlp
+fi
 
 if (( ${#URLS[@]} == 0 )); then
   echo "Keine Videos gefunden (Playlist leer / privat / Fehler beim Laden)." >&2
