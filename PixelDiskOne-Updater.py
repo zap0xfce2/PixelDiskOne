@@ -31,6 +31,7 @@ NOTIFY_ICON_ERROR = "dialog-error"  # Git- / pip-Fehler
 NOTIFY_ICON_WARNING = "dialog-warning"  # pip-Timeout / Warnungen
 VENV_DIR = os.path.join(REPO_DIR, ".venv")
 VENV_PYTHON = os.path.join(VENV_DIR, "bin", "python")
+TAGS_DB_FILE = "NFC-Tags.db"
 
 
 def has_internet() -> bool:
@@ -74,6 +75,16 @@ def has_remote_changes() -> bool:
         text=True,
     )
     return local.stdout.strip() != remote.stdout.strip()
+
+
+def update_tags_db() -> bool:
+    """Aktualisiert nur die Tag-Datenbank, schnell und unabhängig vom restlichen Update."""
+    result = subprocess.run(
+        ["git", "-C", REPO_DIR, "checkout", "origin/dev", "--", TAGS_DB_FILE],
+        timeout=GIT_TIMEOUT,
+        capture_output=True,
+    )
+    return result.returncode == 0
 
 
 def apply_update() -> bool:
@@ -152,6 +163,9 @@ def main() -> None:
         )
         Console.error("git fetch Timeout.")
         sys.exit(0)
+
+    if not update_tags_db():
+        Console.warning("NFC-Tags.db konnte nicht vorab aktualisiert werden.")
 
     if not args.force and not has_remote_changes():
         Console.info("Kein Update nötig – starte mit aktuellem Stand.")

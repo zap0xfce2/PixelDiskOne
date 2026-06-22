@@ -18,8 +18,8 @@ screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
 # evtl. vorhandene Mutefile entfernen
 rm -f "$HOME/.mute" 2>/dev/null || true
 
-# Updater blockierend ausführen
-(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
+# Updater im Hintergrund ausführen
+screen -S PixelDiskOneUpdater -dm bash -c "cd $HOME/PixelDiskOne && ./PixelDiskOne-Updater.py"
 
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
