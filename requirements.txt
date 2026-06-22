@@ -3,4 +3,3 @@ pyyaml
 nfcpy
 Pillow
 pytest
-pyusb
