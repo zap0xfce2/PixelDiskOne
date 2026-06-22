@@ -34,10 +34,13 @@ INVIDIOUS_BASE_URL="${INVIDIOUS_BASE_URL:-https://inv.nadeko.net}"
 WINDOW_TITLE="YoutubePlayer"
 
 splash_pid=""
+ytdlp_pid=""
+ytdlp_outfile=""
 
 cleanup() {
   rm -f "$MUTE_FILE" 2>/dev/null || true
   stop_splash
+  stop_ytdlp_resolve
 }
 trap cleanup EXIT INT TERM QUIT
 
@@ -54,6 +57,16 @@ stop_splash() {
     wait "${splash_pid}" 2>/dev/null || true
   fi
   splash_pid=""
+}
+
+stop_ytdlp_resolve() {
+  if [[ -n "${ytdlp_pid}" ]] && kill -0 "${ytdlp_pid}" 2>/dev/null; then
+    kill "${ytdlp_pid}" 2>/dev/null || true
+    wait "${ytdlp_pid}" 2>/dev/null || true
+  fi
+  ytdlp_pid=""
+  rm -f "${ytdlp_outfile}" 2>/dev/null || true
+  ytdlp_outfile=""
 }
 
 load_playlist_from_invidious() {
@@ -93,15 +106,25 @@ load_playlist_from_ytdlp() {
   done < <(yt-dlp --flat-playlist --print "%(id)s" "https://www.youtube.com/playlist?list=${PLAYLIST_ID}" 2>/dev/null)
 }
 
-# Fallback wenn Invidious keine Stream-URLs liefert (z.B. HTTP 403 bei adaptiveFormats).
-# Setzt video_url/audio_url, oder lässt sie leer wenn yt-dlp ebenfalls scheitert.
-resolve_stream_via_ytdlp() {
+# Kopfstart-Fallback: yt-dlp parallel zur Invidious-Anfrage starten, damit dessen
+# Anlaufzeit (inkl. deno-Start für den JS-Challenge-Solver) bei einem Invidious-Fehlschlag
+# (z.B. HTTP 403 bei adaptiveFormats) nicht erst sequenziell anfällt.
+start_ytdlp_resolve_async() {
   local id="$1"
-  local output
-  output="$(yt-dlp -f "bestvideo+bestaudio" -g --remote-components ejs:github "https://www.youtube.com/watch?v=${id}" 2>/dev/null)"
+  ytdlp_outfile="$(mktemp)"
+  yt-dlp -f "bestvideo+bestaudio" -g --remote-components ejs:github "https://www.youtube.com/watch?v=${id}" >"${ytdlp_outfile}" 2>/dev/null &
+  ytdlp_pid=$!
+}
 
-  video_url="$(printf '%s' "$output" | sed -n '1p')"
-  audio_url="$(printf '%s' "$output" | sed -n '2p')"
+# Wartet auf das bereits laufende yt-dlp aus start_ytdlp_resolve_async und setzt
+# video_url/audio_url, oder lässt sie leer wenn yt-dlp ebenfalls scheitert.
+collect_ytdlp_resolve() {
+  wait "${ytdlp_pid}" 2>/dev/null
+  video_url="$(sed -n '1p' "${ytdlp_outfile}")"
+  audio_url="$(sed -n '2p' "${ytdlp_outfile}")"
+  rm -f "${ytdlp_outfile}"
+  ytdlp_pid=""
+  ytdlp_outfile=""
 }
 
 # Splash sofort starten (instant Feedback)
@@ -129,6 +152,10 @@ while true; do
 
   # Video- und Audio-Stream via Invidious adaptiveFormats auflösen
   video_id="${url##*v=}"
+
+  # yt-dlp-Fallback per Kopfstart sofort parallel anstoßen, falls Invidious scheitert
+  start_ytdlp_resolve_async "$video_id"
+
   api_response="$(curl -sf "${INVIDIOUS_BASE_URL}/api/v1/videos/${video_id}?fields=adaptiveFormats&local=true")"
 
   video_url="$(printf '%s' "$api_response" \
@@ -137,9 +164,11 @@ while true; do
   audio_url="$(printf '%s' "$api_response" \
     | jq -r '[.adaptiveFormats[] | select(.type | startswith("audio/"))] | sort_by(.bitrate | tonumber) | last | .url // empty')"
 
-  if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
-    echo "Invidious liefert keine Stream-URLs -> Fallback auf yt-dlp" >&2
-    resolve_stream_via_ytdlp "$video_id"
+  if [[ -n "${video_url}" && -n "${audio_url}" ]]; then
+    stop_ytdlp_resolve
+  else
+    echo "Invidious liefert keine Stream-URLs -> Fallback auf (bereits laufendes) yt-dlp" >&2
+    collect_ytdlp_resolve
   fi
 
   if [[ -z "${video_url}" || -z "${audio_url}" ]]; then
