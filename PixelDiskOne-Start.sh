@@ -19,7 +19,7 @@ screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
 rm -f "$HOME/.mute" 2>/dev/null || true
 
 # Updater blockierend ausführen
-(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
+#(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
 
 # NFC-Reader-Reset: USB4-Router vor Start zurücksetzen
 sudo "$HOME/PixelDiskOne/NfcReaderReset.sh"
