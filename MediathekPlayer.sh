@@ -81,8 +81,10 @@ pick_episode_before_date() {
     | sort_by(.timestamp) | reverse
     | map(select(.day <= $date_limit))
     | .[0]
-    | [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
-    | select(.[0] != null)
+    | if . == null then empty else
+        [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
+        | select(.[0] != null)
+      end
     | @tsv
   '
 }
@@ -98,8 +100,8 @@ resp="$(
     --data "$(jq -nc --arg t "$TOPIC_QUERY" --arg c "$CHANNEL_QUERY" --argjson size "$SIZE" '
       {
         queries: [
-          { fields: ["topic"],   query: $t },
-          { fields: ["channel"], query: $c }
+          { fields: ["topic", "title"], query: $t },
+          { fields: ["channel"],        query: $c }
         ],
         sortBy: "timestamp",
         sortOrder: "desc",
@@ -114,46 +116,48 @@ resp="$(
 IFS=$'\t' read -r mp4_url episode_date <<< "$(printf '%s' "$resp" | pick_episode_before_date "$(date +%Y%m%d)")"
 
 if (( RANDOM_MODE )); then
-  total="$(printf '%s' "$resp" | jq '.result.queryInfo.resultCount')"
+  total="$(printf '%s' "$resp" | jq '.result.queryInfo.resultCount // 0')"
 
   mp4_url=""
   episode_date=""
-  for _ in $(seq 1 "$MAX_RANDOM_RETRIES"); do
-    random_offset=$(( (RANDOM * 32768 + RANDOM) % total ))
-    _result="$(
-      curl -sS \
-        -H 'content-type: application/json' \
-        -H 'accept: application/json' \
-        --data "$(jq -nc \
-          --arg t "$TOPIC_QUERY" \
-          --arg c "$CHANNEL_QUERY" \
-          --argjson offset "$random_offset" '
-          {
-            queries: [
-              { fields: ["topic"],   query: $t },
-              { fields: ["channel"], query: $c }
-            ],
-            sortBy: "timestamp",
-            sortOrder: "desc",
-            future: false,
-            offset: $offset,
-            size: 1
-          }
-        ')" \
-        "$API_URL" \
-      | jq -r '
-          .result.results[0]
-          | select((.title // "") | test("Gebärdensprache"; "i") | not)
-          | [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
-          | select(.[0] != null)
-          | @tsv
-        '
-    )"
-    if [[ -n "$_result" ]]; then
-      IFS=$'\t' read -r mp4_url episode_date <<< "$_result"
-      break
-    fi
-  done
+  if (( total > 0 )); then
+    for _ in $(seq 1 "$MAX_RANDOM_RETRIES"); do
+      random_offset=$(( (RANDOM * 32768 + RANDOM) % total ))
+      _result="$(
+        curl -sS \
+          -H 'content-type: application/json' \
+          -H 'accept: application/json' \
+          --data "$(jq -nc \
+            --arg t "$TOPIC_QUERY" \
+            --arg c "$CHANNEL_QUERY" \
+            --argjson offset "$random_offset" '
+            {
+              queries: [
+                { fields: ["topic", "title"], query: $t },
+                { fields: ["channel"],        query: $c }
+              ],
+              sortBy: "timestamp",
+              sortOrder: "desc",
+              future: false,
+              offset: $offset,
+              size: 1
+            }
+          ')" \
+          "$API_URL" \
+        | jq -r '
+            .result.results[0]
+            | select((.title // "") | test("Gebärdensprache"; "i") | not)
+            | [(.url_video_hd // .url_video), (.timestamp | tonumber | strflocaltime("%d.%m.%Y"))]
+            | select(.[0] != null)
+            | @tsv
+          '
+      )"
+      if [[ -n "$_result" ]]; then
+        IFS=$'\t' read -r mp4_url episode_date <<< "$_result"
+        break
+      fi
+    done
+  fi
 fi
 
 if [[ -z "$mp4_url" ]]; then
