@@ -12,17 +12,17 @@ screen -ls | grep -oP '\d+\.\S+' | xargs -I{} screen -S {} -X quit
 # Maus wegschieben
 xdotool mousemove 0 $(xdpyinfo | awk '/dimensions/{print $2}' | cut -d'x' -f2)
 
-# Maus verstecken
+# Aktiviert das die Maus nach 0,5 Sekunden inaktivität verschwindet
 screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
 
 # evtl. vorhandene Mutefile entfernen
 rm -f "$HOME/.mute" 2>/dev/null || true
 
 # Updater blockierend ausführen
-(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
+#(cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
 
-# NFC-Reader-Reset: USB4-Router vor Start zurücksetzen
-sudo "$HOME/PixelDiskOne/NfcReaderReset.sh"
+# NFC-Reader-Reset
+#sudo "$HOME/PixelDiskOne/NfcReaderReset.sh"
 
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
