@@ -59,6 +59,18 @@ Ein Script um Inhalte von https://mediathekviewweb.de abzuspielen.
 
 Läuft im Hintergrund und fadet den Splash oder die Backgroundmusic ein oder aus. Je nachdem ob ein Content läuft oder nicht.
 
+### NfcReaderReset
+
+Resettet den NFC-Reader (ACR122U) per PCI-Unbind/Rebind des USB4-Host-Controllers, falls der Reader hängt. Läuft als systemd-Service (`nfc-reader-reset.service`) bereits sehr früh beim Boot, unabhängig vom grafischen Login. Aktivieren auf dem echten Gerät:
+
+```bash
+sudo cp nfc-reader-reset.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable nfc-reader-reset.service
+sudo systemctl start nfc-reader-reset.service   # optional: sofort testen ohne Reboot
+journalctl -u nfc-reader-reset.service -b       # Log/Status seit letztem Boot prüfen
+```
+
 ### PixelDiskOne-Start
 
 Das Startscript für die PixelDiskOne. Von hier aus geht alles los.

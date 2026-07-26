@@ -1,0 +1,19 @@
+[Unit]
+Description=NFC-Reader USB4-Controller Reset (PCI unbind/rebind xhci_hcd, frueh beim Boot)
+DefaultDependencies=no
+Wants=systemd-udev-settle.service
+After=systemd-udev-settle.service
+Before=sysinit.target shutdown.target
+Conflicts=shutdown.target
+ConditionPathExists=/sys/bus/pci/drivers/xhci_hcd
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/retro/PixelDiskOne/NfcReaderReset.sh
+TimeoutStartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=sysinit.target
