@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Erstellt von Zap0xfce2 im Februar 2025
 
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -23,6 +24,14 @@ BACKEND = "usb:072f:2200"
 NFC_VENDOR_ID = 0x072F
 NFC_PRODUCT_ID = 0x2200
 _USB_RE_ENUM_WAIT_SECS = 1.5
+
+_arg_parser = argparse.ArgumentParser()
+_arg_parser.add_argument(
+    "--pre-script",
+    default=None,
+    help="Befehl, der vor jedem Programmstart synchron ausgeführt wird (z.B. SetScreenResolution.sh)",
+)
+_args = _arg_parser.parse_args()
 
 _current_proc = None
 _tag_present = False
@@ -64,6 +73,12 @@ def start_process(tag):
     if _current_proc is None:
         command = Database.read(tag_value)
         if command:
+            if _args.pre_script:
+                try:
+                    Console.info(f"Führe Pre-Script aus: {_args.pre_script}")
+                    subprocess.run(shlex.split(_args.pre_script), check=False)
+                except Exception as e:
+                    Console.error(f"Pre-Script fehlgeschlagen: {e}")
             try:
                 Console.info(f"Starte: {command}")
                 _current_proc = subprocess.Popen(

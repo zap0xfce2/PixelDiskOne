@@ -28,7 +28,7 @@ rm -f "$HOME/.mute" 2>/dev/null || true
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
 
 # NFC Reader starten
-screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py"
+screen -S PixelDiskOne -dm bash -c "cd $HOME/PixelDiskOne && ./Main.py --pre-script $HOME/PixelDiskOne/SetScreenResolution.sh"
 
 # Screentime starten
 screen -S ScreenTime -dm bash -c "cd $HOME/PixelDiskOne/ScreenTime && ./ScreenTimeTracker.py"
