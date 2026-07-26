@@ -22,7 +22,7 @@ rm -f "$HOME/.mute" 2>/dev/null || true
 (cd "$HOME/PixelDiskOne" && ./PixelDiskOne-Updater.py)
 
 # NFC-Reader-Reset
-sudo "$HOME/PixelDiskOne/NfcReaderReset.sh"
+#sudo "$HOME/PixelDiskOne/NfcReaderReset.sh"
 
 # BGM & Splash Muter starten
 screen -S MuteMusicAndSplash -dm bash -c "cd $HOME/PixelDiskOne && ./MuteMusicAndSplash.sh"
