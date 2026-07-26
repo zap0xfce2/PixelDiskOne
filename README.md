@@ -55,13 +55,13 @@ Dient dazu eine URL auf den Homebutton der Fernbedienung zu legen.
 
 Ein Script um Inhalte von https://mediathekviewweb.de abzuspielen.
 
-### MutMusicAndSplash
+### MuteMusicAndSplash
 
 Läuft im Hintergrund und fadet den Splash oder die Backgroundmusic ein oder aus. Je nachdem ob ein Content läuft oder nicht.
 
 ### NfcReaderReset
 
-Resettet den NFC-Reader (ACR122U) per PCI-Unbind/Rebind des USB4-Host-Controllers, falls der Reader hängt. Läuft als systemd-Service (`nfc-reader-reset.service`) bereits sehr früh beim Boot, unabhängig vom grafischen Login. Aktivieren auf dem echten Gerät:
+Resettet den NFC-Reader (ACR122U) per PCI-Unbind/Rebind des USB4-Host-Controllers, falls der Reader hängt. Läuft als systemd-Service (`nfc-reader-reset.service`)Aktivieren via:
 
 ```bash
 sudo cp nfc-reader-reset.service /etc/systemd/system/
