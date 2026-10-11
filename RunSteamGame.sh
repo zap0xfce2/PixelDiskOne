@@ -5,6 +5,7 @@ APPID="$1"
 
 MUTE_FILE="$HOME/.mute"
 STARTUP_TIMEOUT_SECS=120
+FOCUS_DELAY_SECS=2
 LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
@@ -25,6 +26,13 @@ cleanup() {
   rm -f "$MUTE_FILE" 2>/dev/null || true
   mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
+  focus_desktop
+}
+
+# Entkoppelt, da das Spielfenster erst nach dem Wrapper verschwindet und xfwm4 den Fokus sonst an die Leiste gibt
+# ponytail: feste Wartezeit, auf Fenster-Polling umstellen falls Spiele länger zum Schließen brauchen
+focus_desktop() {
+  setsid bash -c "sleep $FOCUS_DELAY_SECS; xdotool search --onlyvisible --classname xfdesktop windowactivate" &>/dev/null &
 }
 
 game_running() {
