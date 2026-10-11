@@ -9,9 +9,22 @@ LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
 
+descendant_pids() {
+  local pid child
+  for pid in "$@"; do
+    echo "$pid"
+    for child in $(pgrep -P "$pid"); do
+      descendant_pids "$child"
+    done
+  done
+}
+
+# Ganzen Baum vorab sammeln: das Spiel läuft unter pressure-vessel in eigener Prozessgruppe ohne AppId in der cmdline
 cleanup() {
+  local pids
   rm -f "$MUTE_FILE" 2>/dev/null || true
-  pkill -TERM -f "$GAME_PATTERN" 2>/dev/null || true
+  mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
+  (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
 }
 
 game_running() {
