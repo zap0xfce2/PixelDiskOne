@@ -8,6 +8,7 @@ STARTUP_TIMEOUT_SECS=120
 LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
+NOTIFY_ID=""
 
 descendant_pids() {
   local pid child
@@ -23,8 +24,17 @@ descendant_pids() {
 cleanup() {
   local pids
   rm -f "$MUTE_FILE" 2>/dev/null || true
+  close_start_toast
   mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
+}
+
+# Start-Toast bleibt ohne Timeout stehen, bis das Spiel läuft (Steam-Kaltstart dauert)
+close_start_toast() {
+  [[ -n "$NOTIFY_ID" ]] || return 0
+  gdbus call --session --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.CloseNotification "$NOTIFY_ID" &>/dev/null || true
 }
 
 game_running() {
@@ -53,7 +63,7 @@ trap 'exit 143' TERM INT QUIT
 trap cleanup EXIT
 
 touch "$MUTE_FILE"
-notify-send "Diskette eingelegt" "$(game_name) wird gestartet." -i "/home/retro/PixelDiskOne/floppy-disk.png" -t "5000"
+NOTIFY_ID="$(notify-send -p -t 0 "Diskette eingelegt" "$(game_name) wird gestartet." -i "/home/retro/PixelDiskOne/floppy-disk.png" || true)"
 
 # setsid: kalt gestarteter Client überlebt das Entfernen der Diskette; -silent: kein Steam-Hauptfenster
 setsid steam -silent "steam://rungameid/$APPID" &>/dev/null &
@@ -67,6 +77,7 @@ until game_running; do
   interruptible_sleep
   waited=$((waited + 1))
 done
+close_start_toast
 
 while game_running; do
   interruptible_sleep

@@ -9,8 +9,8 @@ export PATH="$HOME/PixelDiskOne/.venv/bin:$PATH"
 # für einen sauberen start alle screen sessions beenden
 screen -ls | grep -oP '\d+\.\S+' | xargs -I{} screen -S {} -X quit
 
-# Maus an den linken Rand parken, weg von den Ecken mit der XFCE-Leiste
-xdotool mousemove 0 500
+# Maus an den linken Rand parken
+xdotool mousemove 0 $(xdpyinfo | awk '/dimensions/{print $2}' | cut -d'x' -f2)
 
 # Aktiviert das die Maus nach 0,5 Sekunden inaktivität verschwindet
 screen -S MouseHider -dm bash -c "unclutter -idle 0.5 -root"
