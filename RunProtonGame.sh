@@ -23,14 +23,42 @@ EXE_STEM="${EXE_BASENAME%.*}"           # z.B. Dispatch
 MUTE_FILE="$HOME/.mute"
 touch "$MUTE_FILE"
 
-# Notification senden da der Start ein wenig dauern kann
-notify-send "Diskette eingelegt" "$EXE_STEM wird gestartet." -i "/home/retro/PixelDiskOne/floppy-disk.png" -t "5000"
+STARTUP_TIMEOUT_SECS=120
+NOTIFY_ID=""
+TOAST_ICON="/home/retro/PixelDiskOne/floppy-disk.png"
+
+# Start-Toast bleibt ohne Timeout stehen, bis das Spielfenster erscheint (Proton-Start dauert).
+# Direkt per D-Bus statt notify-send, da "notify-send -p" (ID ausgeben) erst ab libnotify 0.8 existiert.
+show_start_toast() {
+  local reply
+  reply="$(gdbus call --session --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.Notify \
+    "PixelDiskOne" 0 "$TOAST_ICON" "Diskette eingelegt" "$1" "[]" "{}" 0 2>/dev/null)" || return 0
+  # Antwortformat: "(uint32 42,)"
+  sed -nE 's/^\(uint32 ([0-9]+),\)$/\1/p' <<< "$reply"
+}
+
+close_start_toast() {
+  [[ -n "$NOTIFY_ID" ]] || return 0
+  gdbus call --session --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.CloseNotification "$NOTIFY_ID" &>/dev/null || true
+}
+
+# Wine setzt WM_CLASS auf den EXE-Namen; EXE_STEM trifft auch Launcher-Kinder wie Dispatch-Win64-Shipping.exe
+game_window_visible() {
+  xdotool search --onlyvisible --class "$EXE_STEM" &>/dev/null
+}
+
+NOTIFY_ID="$(show_start_toast "$EXE_STEM wird gestartet.")"
 
 cleanup() {
   echo "cleanup: beende Proton/Wine für $EXE_BASENAME" >&2
 
   # Mute-File aufräumen
   rm -f "$MUTE_FILE" 2>/dev/null || true
+  close_start_toast
 
   # erst höflich: wineserver zu diesem Prefix beenden
   WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx" wineserver -k 2>/dev/null || true
@@ -55,5 +83,14 @@ cd "$EXE_DIR"
 # wichtig: KEIN exec, damit das Script selbst das Signal bekommt
 "$PROTON" run "$EXE" &
 child=$!
+
+# sleep im Hintergrund, damit der Trap sofort greift (Main.py schickt nach 1 s SIGKILL)
+waited=0
+while kill -0 "$child" 2>/dev/null && ! game_window_visible && (( waited < STARTUP_TIMEOUT_SECS )); do
+  sleep 1 &
+  wait $!
+  waited=$((waited + 1))
+done
+close_start_toast
 
 wait "$child"
