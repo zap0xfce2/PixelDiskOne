@@ -24,6 +24,7 @@ MUTE_FILE="$HOME/.mute"
 touch "$MUTE_FILE"
 
 STARTUP_TIMEOUT_SECS=120
+PROTON_WINDOW_CLASS="steam_proton"
 NOTIFY_ID=""
 TOAST_ICON="/home/retro/PixelDiskOne/floppy-disk.png"
 
@@ -46,9 +47,9 @@ close_start_toast() {
     --method org.freedesktop.Notifications.CloseNotification "$NOTIFY_ID" &>/dev/null || true
 }
 
-# Wine setzt WM_CLASS auf den EXE-Namen; EXE_STEM trifft auch Launcher-Kinder wie Dispatch-Win64-Shipping.exe
+# Proton setzt WM_CLASS ohne SteamAppId-Env fest auf "steam_proton" (nicht auf den EXE-Namen)
 game_window_visible() {
-  xdotool search --onlyvisible --class "$EXE_STEM" &>/dev/null
+  xdotool search --onlyvisible --class "^${PROTON_WINDOW_CLASS}\$" &>/dev/null
 }
 
 NOTIFY_ID="$(show_start_toast "$EXE_STEM wird gestartet.")"
