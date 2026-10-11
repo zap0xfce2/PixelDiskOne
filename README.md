@@ -29,6 +29,12 @@ Ein Eintrag für ein Steam Spiel sieht dann z.B. so aus:
 /home/retro/PixelDiskOne/RunProtonGame.sh "/home/retro/Games/Subnautica/Subnautica.exe" "Proton 9.0 (Beta)"
 ```
 
+Ein über Steam installiertes Spiel wird über seine App-ID gestartet:
+
+```text
+/home/retro/PixelDiskOne/RunSteamGame.sh 1330890
+```
+
 Es können auch andere Emulatoren oder Scripte hinzugefügt um diese via Diskette zu starten.
 
 ### NFC-Tag erstellen
@@ -78,6 +84,10 @@ Das Startscript für die PixelDiskOne. Von hier aus geht alles los.
 ### RunProtonGame
 
 Dient zum starten von Windows Spielen via Proton.
+
+### RunSteamGame
+
+Startet ein Steam-Spiel über die App-ID.
 
 ### PixelDiskOne-Updater
 
