@@ -9,6 +9,7 @@ LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
 NOTIFY_ID=""
+TOAST_ICON="/home/retro/PixelDiskOne/floppy-disk.png"
 
 descendant_pids() {
   local pid child
@@ -29,7 +30,18 @@ cleanup() {
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
 }
 
-# Start-Toast bleibt ohne Timeout stehen, bis das Spiel läuft (Steam-Kaltstart dauert)
+# Start-Toast bleibt ohne Timeout stehen, bis das Spiel läuft (Steam-Kaltstart dauert).
+# Direkt per D-Bus statt notify-send, da "notify-send -p" (ID ausgeben) erst ab libnotify 0.8 existiert.
+show_start_toast() {
+  local reply
+  reply="$(gdbus call --session --dest org.freedesktop.Notifications \
+    --object-path /org/freedesktop/Notifications \
+    --method org.freedesktop.Notifications.Notify \
+    "PixelDiskOne" 0 "$TOAST_ICON" "Diskette eingelegt" "$1" "[]" "{}" 0 2>/dev/null)" || return 0
+  # Antwortformat: "(uint32 42,)"
+  sed -nE 's/^\(uint32 ([0-9]+),\)$/\1/p' <<< "$reply"
+}
+
 close_start_toast() {
   [[ -n "$NOTIFY_ID" ]] || return 0
   gdbus call --session --dest org.freedesktop.Notifications \
@@ -63,7 +75,7 @@ trap 'exit 143' TERM INT QUIT
 trap cleanup EXIT
 
 touch "$MUTE_FILE"
-NOTIFY_ID="$(notify-send -p -t 0 "Diskette eingelegt" "$(game_name) wird gestartet." -i "/home/retro/PixelDiskOne/floppy-disk.png" || true)"
+NOTIFY_ID="$(show_start_toast "$(game_name) wird gestartet.")"
 
 # setsid: kalt gestarteter Client überlebt das Entfernen der Diskette; -silent: kein Steam-Hauptfenster
 setsid steam -silent "steam://rungameid/$APPID" &>/dev/null &
