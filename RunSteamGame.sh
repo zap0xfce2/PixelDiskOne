@@ -55,8 +55,8 @@ trap cleanup EXIT
 touch "$MUTE_FILE"
 notify-send "Diskette eingelegt" "$(game_name) wird gestartet." -i "/home/retro/PixelDiskOne/floppy-disk.png" -t "5000"
 
-# setsid: ein kalt gestarteter Steam-Client soll das Entfernen der Diskette überleben
-setsid steam "steam://rungameid/$APPID" &>/dev/null &
+# setsid: kalt gestarteter Client überlebt das Entfernen der Diskette; -silent: kein Steam-Hauptfenster
+setsid steam -silent "steam://rungameid/$APPID" &>/dev/null &
 
 waited=0
 until game_running; do
