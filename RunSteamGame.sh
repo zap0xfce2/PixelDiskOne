@@ -5,7 +5,6 @@ APPID="$1"
 
 MUTE_FILE="$HOME/.mute"
 STARTUP_TIMEOUT_SECS=120
-FOCUS_DELAY_SECS=2
 LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
@@ -24,15 +23,14 @@ descendant_pids() {
 cleanup() {
   local pids
   rm -f "$MUTE_FILE" 2>/dev/null || true
+  move_mouse_bottom_left
   mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
-  focus_desktop
 }
 
-# Entkoppelt, da das Spielfenster erst nach dem Wrapper verschwindet und xfwm4 den Fokus sonst an die Leiste gibt
-# ponytail: feste Wartezeit, auf Fenster-Polling umstellen falls Spiele länger zum Schließen brauchen
-focus_desktop() {
-  setsid bash -c "sleep $FOCUS_DELAY_SECS; xdotool search --onlyvisible --classname xfdesktop windowactivate" &>/dev/null &
+# Steam lässt die Maus oben links über der XFCE-Leiste stehen; wie in PixelDiskOne-Start.sh nach unten links
+move_mouse_bottom_left() {
+  xdotool mousemove 0 "$(xdpyinfo | awk '/dimensions/{print $2}' | cut -d'x' -f2)" 2>/dev/null || true
 }
 
 game_running() {
