@@ -23,14 +23,8 @@ descendant_pids() {
 cleanup() {
   local pids
   rm -f "$MUTE_FILE" 2>/dev/null || true
-  move_mouse_bottom_left
   mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
-}
-
-# Steam lässt die Maus oben links über der XFCE-Leiste stehen; wie in PixelDiskOne-Start.sh nach unten links
-move_mouse_bottom_left() {
-  xdotool mousemove 0 "$(xdpyinfo | awk '/dimensions/{print $2}' | cut -d'x' -f2)" 2>/dev/null || true
 }
 
 game_running() {
