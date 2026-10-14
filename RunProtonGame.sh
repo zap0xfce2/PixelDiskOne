@@ -2,7 +2,9 @@
 set -euo pipefail
 
 EXE="$1"
-PROTON_VERSION="$2"
+# Ordnername unter steamapps/common; ohne Angabe Proton Experimental
+DEFAULT_PROTON_VERSION="Proton - Experimental"
+PROTON_VERSION="${2:-$DEFAULT_PROTON_VERSION}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/Splash.sh"
