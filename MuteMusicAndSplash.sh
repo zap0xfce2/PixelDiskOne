@@ -5,7 +5,7 @@ set -euo pipefail
 # Konfiguration
 # =========================
 # Prozesse, die das Ducking auslösen (exakte Namen für pgrep -x)
-TARGET_PROCS=("retroarch" "brave-browser" "firefox" "xfce4-terminal" "zelda3")
+TARGET_PROCS=("retroarch" "brave-browser" "firefox" "xfce4-terminal" "zelda3", "opendana")
 
 # Optionales Mute-File im Home-Verzeichnis
 MUTE_FILE="$HOME/.mute"
