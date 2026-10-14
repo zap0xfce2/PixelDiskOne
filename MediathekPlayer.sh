@@ -31,8 +31,8 @@ for arg in "${@:3}"; do
   esac
 done
 
-DEFAULT_SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
-SPLASH_PNG="$DEFAULT_SPLASH_PNG"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/Splash.sh"
 
 # Mute-File für Ducking
 MUTE_FILE="$HOME/.mute"
@@ -41,28 +41,11 @@ touch "$MUTE_FILE"
 
 WINDOW_TITLE="MediathekPlayer"
 
-splash_pid=""
-
 cleanup() {
   rm -f "$MUTE_FILE" 2>/dev/null || true
   stop_splash
 }
 trap cleanup EXIT INT TERM QUIT
-
-start_splash() {
-  if [[ -n "${SPLASH_PNG}" && -f "${SPLASH_PNG}" ]]; then
-    feh --fullscreen --hide-pointer --auto-zoom "${SPLASH_PNG}" >/dev/null 2>&1 &
-    splash_pid=$!
-  fi
-}
-
-stop_splash() {
-  if [[ -n "${splash_pid}" ]] && kill -0 "${splash_pid}" 2>/dev/null; then
-    kill "${splash_pid}" 2>/dev/null || true
-    wait "${splash_pid}" 2>/dev/null || true
-  fi
-  splash_pid=""
-}
 
 pick_episode_before_date() {
   # Nimmt die neueste Folge deren Datum <= date_limit ist.

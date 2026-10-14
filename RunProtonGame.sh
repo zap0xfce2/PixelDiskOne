@@ -4,6 +4,9 @@ set -euo pipefail
 EXE="$1"
 PROTON_VERSION="$2"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/Splash.sh"
+
 EXE_DIR="$(dirname "$EXE")"
 APPID_FILE="$EXE_DIR/steam_appid.txt"
 APPID="$(head -n1 "$APPID_FILE" | tr -d '\r\n ')"
@@ -25,41 +28,18 @@ touch "$MUTE_FILE"
 
 STARTUP_TIMEOUT_SECS=120
 PROTON_WINDOW_CLASS="steam_proton"
-NOTIFY_ID=""
-TOAST_ICON="/home/retro/PixelDiskOne/floppy-disk.png"
-
-# Start-Toast bleibt ohne Timeout stehen, bis das Spielfenster erscheint (Proton-Start dauert).
-# Direkt per D-Bus statt notify-send, da "notify-send -p" (ID ausgeben) erst ab libnotify 0.8 existiert.
-show_start_toast() {
-  local reply
-  reply="$(gdbus call --session --dest org.freedesktop.Notifications \
-    --object-path /org/freedesktop/Notifications \
-    --method org.freedesktop.Notifications.Notify \
-    "PixelDiskOne" 0 "$TOAST_ICON" "Diskette eingelegt" "$1" "[]" "{}" 0 2>/dev/null)" || return 0
-  # Antwortformat: "(uint32 42,)"
-  sed -nE 's/^\(uint32 ([0-9]+),\)$/\1/p' <<< "$reply"
-}
-
-close_start_toast() {
-  [[ -n "$NOTIFY_ID" ]] || return 0
-  gdbus call --session --dest org.freedesktop.Notifications \
-    --object-path /org/freedesktop/Notifications \
-    --method org.freedesktop.Notifications.CloseNotification "$NOTIFY_ID" &>/dev/null || true
-}
 
 # Proton setzt WM_CLASS ohne SteamAppId-Env fest auf "steam_proton" (nicht auf den EXE-Namen)
 game_window_visible() {
   xdotool search --onlyvisible --class "^${PROTON_WINDOW_CLASS}\$" &>/dev/null
 }
 
-NOTIFY_ID="$(show_start_toast "$EXE_STEM wird gestartet.")"
-
 cleanup() {
   echo "cleanup: beende Proton/Wine für $EXE_BASENAME" >&2
 
   # Mute-File aufräumen
   rm -f "$MUTE_FILE" 2>/dev/null || true
-  close_start_toast
+  stop_splash
 
   # erst höflich: wineserver zu diesem Prefix beenden
   WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx" wineserver -k 2>/dev/null || true
@@ -79,6 +59,9 @@ cleanup() {
 # Signals vom Python-Prozess (SIGTERM) abfangen
 trap cleanup TERM INT QUIT
 
+# Ladesplash bleibt stehen, bis das Spielfenster erscheint (Proton-Start dauert)
+start_splash
+
 cd "$EXE_DIR"
 
 # wichtig: KEIN exec, damit das Script selbst das Signal bekommt
@@ -92,6 +75,6 @@ while kill -0 "$child" 2>/dev/null && ! game_window_visible && (( waited < START
   wait $!
   waited=$((waited + 1))
 done
-close_start_toast
+stop_splash
 
 wait "$child"

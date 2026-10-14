@@ -23,17 +23,17 @@ command -v deno    >/dev/null || { echo "deno nicht gefunden"    >&2; exit 1; }
 
 PLAYLIST_ID="$1"
 
+source "$SCRIPT_DIR/Splash.sh"
+
 # Mute-File für Ducking
 MUTE_FILE="$HOME/.mute"
 touch "$MUTE_FILE"
 
-SPLASH_PNG="/home/retro/Bilder/LoadingScreen.png"
 VOLUME="${2:-100}"
 
 INVIDIOUS_BASE_URL="${INVIDIOUS_BASE_URL:-https://inv.nadeko.net}"
 WINDOW_TITLE="YoutubePlayer"
 
-splash_pid=""
 ytdlp_pid=""
 ytdlp_outfile=""
 
@@ -43,21 +43,6 @@ cleanup() {
   stop_ytdlp_resolve
 }
 trap cleanup EXIT INT TERM QUIT
-
-start_splash() {
-  if [[ -n "${SPLASH_PNG}" && -f "${SPLASH_PNG}" ]]; then
-    feh --fullscreen --hide-pointer --auto-zoom "${SPLASH_PNG}" >/dev/null 2>&1 &
-    splash_pid=$!
-  fi
-}
-
-stop_splash() {
-  if [[ -n "${splash_pid}" ]] && kill -0 "${splash_pid}" 2>/dev/null; then
-    kill "${splash_pid}" 2>/dev/null || true
-    wait "${splash_pid}" 2>/dev/null || true
-  fi
-  splash_pid=""
-}
 
 stop_ytdlp_resolve() {
   if [[ -n "${ytdlp_pid}" ]] && kill -0 "${ytdlp_pid}" 2>/dev/null; then

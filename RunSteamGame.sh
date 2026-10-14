@@ -3,13 +3,16 @@ set -euo pipefail
 
 APPID="$1"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/Splash.sh"
+
 MUTE_FILE="$HOME/.mute"
 STARTUP_TIMEOUT_SECS=120
-LIBRARY_FOLDERS_FILE="$HOME/.steam/steam/steamapps/libraryfolders.vdf"
 # Steam startet jedes Spiel als "reaper SteamLaunch AppId=<APPID> -- …"; Wortgrenze verhindert Präfix-Treffer
 GAME_PATTERN="AppId=${APPID}( |$)"
-NOTIFY_ID=""
-TOAST_ICON="/home/retro/PixelDiskOne/floppy-disk.png"
+# Steam setzt WM_CLASS des Spielfensters auf "steam_app_<APPID>" (Proton und nativ)
+GAME_WINDOW_CLASS="steam_app_${APPID}"
+STEAM_CLIENT_WINDOW_CLASS="steam"
 
 descendant_pids() {
   local pid child
@@ -25,32 +28,28 @@ descendant_pids() {
 cleanup() {
   local pids
   rm -f "$MUTE_FILE" 2>/dev/null || true
-  close_start_toast
+  stop_splash
   mapfile -t pids < <(descendant_pids $(pgrep -f "$GAME_PATTERN"))
   (( ${#pids[@]} )) && kill -TERM "${pids[@]}" 2>/dev/null || true
 }
 
-# Start-Toast bleibt ohne Timeout stehen, bis das Spiel läuft (Steam-Kaltstart dauert).
-# Direkt per D-Bus statt notify-send, da "notify-send -p" (ID ausgeben) erst ab libnotify 0.8 existiert.
-show_start_toast() {
-  local reply
-  reply="$(gdbus call --session --dest org.freedesktop.Notifications \
-    --object-path /org/freedesktop/Notifications \
-    --method org.freedesktop.Notifications.Notify \
-    "PixelDiskOne" 0 "$TOAST_ICON" "Diskette eingelegt" "$1" "[]" "{}" 0 2>/dev/null)" || return 0
-  # Antwortformat: "(uint32 42,)"
-  sed -nE 's/^\(uint32 ([0-9]+),\)$/\1/p' <<< "$reply"
-}
-
-close_start_toast() {
-  [[ -n "$NOTIFY_ID" ]] || return 0
-  gdbus call --session --dest org.freedesktop.Notifications \
-    --object-path /org/freedesktop/Notifications \
-    --method org.freedesktop.Notifications.CloseNotification "$NOTIFY_ID" &>/dev/null || true
-}
-
 game_running() {
   pgrep -f "$GAME_PATTERN" >/dev/null
+}
+
+game_window_visible() {
+  xdotool search --onlyvisible --class "^${GAME_WINDOW_CLASS}\$" &>/dev/null
+}
+
+# Hauptfenster ist per -silent versteckt → sichtbares Steam-Fenster ist ein Dialog (Update, Bestätigung)
+steam_dialog_visible() {
+  xdotool search --onlyvisible --class "^${STEAM_CLIENT_WINDOW_CLASS}\$" &>/dev/null
+}
+
+# Splash darf Steam-Dialoge nicht verdecken, sonst wartet der Start unsichtbar auf eine Eingabe
+wait_one_second_revealing_dialogs() {
+  steam_dialog_visible && stop_splash
+  interruptible_sleep
 }
 
 # sleep im Hintergrund, damit der Trap sofort greift (Main.py schickt nach 1 s SIGKILL)
@@ -59,23 +58,12 @@ interruptible_sleep() {
   wait $!
 }
 
-# Spielname aus appmanifest_<APPID>.acf aller Steam-Bibliotheken, Fallback: App-ID
-game_name() {
-  local library manifest name
-  while read -r library; do
-    manifest="$library/steamapps/appmanifest_${APPID}.acf"
-    [[ -f "$manifest" ]] || continue
-    name="$(sed -nE 's/^[[:space:]]*"name"[[:space:]]+"(.*)"/\1/p' "$manifest" | head -n1)"
-    [[ -n "$name" ]] && { echo "$name"; return; }
-  done < <(sed -nE 's/^[[:space:]]*"path"[[:space:]]+"(.*)"/\1/p' "$LIBRARY_FOLDERS_FILE" 2>/dev/null)
-  echo "$APPID"
-}
-
 trap 'exit 143' TERM INT QUIT
 trap cleanup EXIT
 
 touch "$MUTE_FILE"
-NOTIFY_ID="$(show_start_toast "$(game_name) wird gestartet.")"
+# Ladesplash bleibt stehen, bis das Spielfenster erscheint (Steam-Kaltstart dauert)
+start_splash
 
 # setsid: kalt gestarteter Client überlebt das Entfernen der Diskette; -silent: kein Steam-Hauptfenster
 setsid steam -silent "steam://rungameid/$APPID" &>/dev/null &
@@ -86,10 +74,16 @@ until game_running; do
     echo "Spiel $APPID nach ${STARTUP_TIMEOUT_SECS}s nicht gestartet." >&2
     exit 1
   fi
-  interruptible_sleep
+  wait_one_second_revealing_dialogs
   waited=$((waited + 1))
 done
-close_start_toast
+
+# Prozess läuft, Fenster evtl. noch nicht; anderes WM_CLASS → Splash endet spätestens nach Timeout
+while game_running && ! game_window_visible && (( waited < STARTUP_TIMEOUT_SECS )); do
+  wait_one_second_revealing_dialogs
+  waited=$((waited + 1))
+done
+stop_splash
 
 while game_running; do
   interruptible_sleep
